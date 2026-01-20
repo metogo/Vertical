@@ -1,5 +1,7 @@
 # Vertical - Urban Explorer Tracking
 
+> 🌍 **[中文版本](README_CN.md)**
+
 Vertical is a high-performance, immersive stair-climbing tracker designed for urban explorers. Built with **SwiftUI**, **The Composable Architecture (TCA)**, and **Metal**, it transforms your skyscraper ascents and urban climbs into a visually stunning experience.
 
 ## 🚀 Key Features
