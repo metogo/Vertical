@@ -1,35 +1,20 @@
 ---
-stepsCompleted:
-  - step-01-init
-  - step-02-discovery
-  - step-03-success
-  - step-04-journeys
-  - step-05-domain
-  - step-06-innovation
-  - step-07-project-type
-  - step-08-scoping
-  - step-09-functional
-  - step-10-nonfunctional
-  - step-11-polish
-  - step-12-complete
-partyMode:
-partyMode:
-  stepsCompleted: [1, 2, 3]
-  agents_loaded: true
-  party_active: false
-  workflow_completed: true
+workflowType: "prd"
+workflow: "edit"
 classification:
   projectType: mobile_app
   domain: sport_fitness
   complexity: medium
   projectContext: greenfield
 inputDocuments: []
-documentCounts:
-  briefs: 0
-  research: 0
-  brainstorming: 0
-  projectDocs: 0
-workflowType: "prd"
+stepsCompleted:
+  - step-e-01-discovery
+  - step-e-02-review
+  - step-e-03-edit
+lastEdited: "2026-01-19"
+editHistory:
+  - date: "2026-01-19"
+    changes: "Added internationalization (i18n) requirements for Chinese and English support."
 ---
 
 # Product Requirements Document - Vertical
@@ -79,7 +64,8 @@ Vertical 是一款专注于爬楼梯/垂直攀升的运动 App，结合极致的
 - **主界面**: 垂直时空轴设计，动态粒子流背景。
 - **核心地标**: 首发内置 3-5 个经典地标（如圣彼得大教堂、自由女神像、埃菲尔铁塔）。
 - **分享**: 基于 GPS 聚簇点的 3D 螺旋轨迹生成与分享卡片。
-- **基础设置**: 楼层高度校准。
+- **国际化支持**: 应用界面、语音播报及推送支持中英文切换。
+- **基础设置**: 楼层高度校准及语言偏好设置。
 
 ### Growth Features (Post-MVP)
 
@@ -100,7 +86,7 @@ Vertical 是一款专注于爬楼梯/垂直攀升的运动 App，结合极致的
 **The Journey**:
 
 1.  **开场**: 晚上加完班，Liam 跳过电梯，打开 Vertical。主界面的垂直中轴线微弱脉冲，激发了他的挑战欲。点击“向上”开始。
-2.  **攀爬**: 爬到 10 楼，TTS 语音播报“10 Floors, VAM 1200”，激励他保持速度。
+2.  **攀爬**: 爬到 10 楼，TTS 语音播报（根据设定的语言，如 "10 Floors, VAM 1200" 或 "10层，垂直升速 1200"），激励他保持速度。
 3.  **高潮**: 20 楼力竭时，看到屏幕上荧光粒子流速加快，3D 螺旋线缠绕在“虚拟圣彼得大教堂”塔尖，提示“还有 30 米登顶”。这种视觉化的目标感让他咬牙冲刺。
 4.  **结局**: 25 楼结束，生成黑底酷炫 3D 螺旋轨迹图，耗时 18 分, 300 卡, VAM 1350。一键分享到朋友圈，“征服圣彼得”。
 
@@ -267,7 +253,14 @@ Vertical 是一款专注于爬楼梯/垂直攀升的运动 App，结合极致的
 - **FR-LA-02**: 用户攀爬高度达到地标高度时，视为“点亮/收集”该地标。
 - **FR-LA-03**: 管理员 (Admin) 可以通过配置文件或简易后台更新地标数据。
 
-### 5. System & Account (系统基础)
+### 6. Internationalization (国际化)
+
+- **FR-IN-01**: 用户可以在设置中切换应用语言，首期支持 **简体中文** 与 **英文**。
+- **FR-IN-02**: 系统所有 UI 文案、地标名称、成就描述及分享卡片模板需支持多语言本地化。
+- **FR-IN-03**: TTS 语音播报（高度、速度、地标解锁）需根据选择的语言自动切换发音引擎。
+- **FR-IN-04**: 系统必须支持“跟随系统语言”的自动识别逻辑。
+
+### 7. System & Account (系统基础)
 
 - **FR-SY-01**: 用户可以在未登录状态下使用 Guest 模式体验所有核心功能（数据存本地）。
 - **FR-SY-02**: 用户可以通过 Apple ID 登录/绑定账号，实现跨设备数据云同步。
@@ -300,3 +293,8 @@ Vertical 是一款专注于爬楼梯/垂直攀升的运动 App，结合极致的
 ### Security
 
 - **Privacy**: 导出的分享卡片/视频中，不得包含任何原始 GPS 元数据 (EXIF)。
+
+### Internationalization
+
+- **NFR-IN-01**: 语言切换必须在用户选择后立即生效，UI 刷新无明显闪烁，且无需后台重启应用。
+- **NFR-IN-02**: 翻译文案需考虑不同语言的长度差异，UI 布局应具备自适应能力（如德语通常比英语长）。

@@ -1,6 +1,6 @@
 # Story 1.2: Core Motion Barometer Integration
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -62,9 +62,16 @@ Antigravity (simulated)
 - Implemented real-time altitude tracking using CoreMotion.
 - Decoupled hardware access via TCA DependencyClient.
 - Verified logic with Unit Tests in `AppReducerTests.swift`.
+- [Refactor] Updated `AppReducer` Action naming to follow `view/internal` convention.
+- [Fix] Moved Altimeter updates to background queue to prevent main thread blocking.
+- [Fix] Fixed singleton capture issue in `liveValue`.
+- [Fix] Corrected typo in `Interface.swift`.
+- [Improvement] Enhanced `Mock.swift` with full CSV replay support.
+- [Test] Improved test stability by removing hardcoded sleeps.
 
 ### File List
 
+- Vertical/Vertical/Sources/Clients/SensorClient/Interface.swift
 - Vertical/Vertical/Sources/Clients/SensorClient/Live.swift
 - Vertical/Vertical/Sources/Clients/SensorClient/Mock.swift
 - Vertical/Vertical/Sources/Features/Root/AppReducer.swift
