@@ -42,4 +42,4 @@ Stair climbing is a high-intensity activity. Please ensure you are in good healt
 
 ---
 
-_Created by Fanhua & Antigravity (2026)_
+\__Created by Fanhua & Antigravity (2026)_
