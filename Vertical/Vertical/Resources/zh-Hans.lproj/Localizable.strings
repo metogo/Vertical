@@ -1,0 +1,63 @@
+"START TRACKING" = "开始追踪";
+"STOP TRACKING" = "停止追踪";
+"RESUME TRACKING" = "恢复追踪";
+"AUTO_PAUSED" = "自动暂停已启动";
+"VAM" = "垂直升速";
+"ALTITUDE" = "当前高度";
+"STATUS" = "状态";
+"ACTIVE" = "活跃中";
+"PAUSED" = "已暂停";
+"NEXT GOAL" = "下一个目标";
+"UNLOCKED" = "已解锁";
+"HAPTICS ON" = "触感反馈已开启";
+"HAPTICS OFF" = "触感反馈已关闭";
+"at %.0fm" = "高度 %.0f 米";
+
+// Onboarding
+"SAFETY & RISK DISCLAIMER" = "安全与风险免责声明";
+"DISCLAIMER_TEXT" = "Vertical 专为城市环境下的爬楼梯追踪设计。爬楼梯是一项高强度的体力活动。";
+"WARNING_1" = "请在开始任何锻炼前确保您身体健康。";
+"WARNING_2" = "请留意周围环境。在楼梯上移动时，请勿专注于应用。";
+"WARNING_3" = "开发者不对因使用本应用而导致的任何伤害、事故或健康问题负责。";
+"WARNING_4" = "继续操作即表示您了解这些风险并同意负责任地使用本应用。";
+"I UNDERSTAND & AGREE" = "我理解并同意";
+
+// Result
+"SUMMARY" = "运动总结";
+"SESSION SUMMARY" = "本次运动总结";
+"TOTAL CLIMB" = "总攀升";
+"MAX VAM" = "最高升速";
+"READINGS" = "采样点数";
+"DONE" = "完成";
+"SHARE" = "分享";
+"DRAG TO ROTATE DATA PATH" = "拖动旋转 3D 路径";
+"PRIVACY ON (HIDDEN START/END)" = "隐私已开启 (隐藏起点/终点)";
+"PRIVACY OFF (SHOW FULL PATH)" = "隐私已关闭 (显示完整路径)";
+
+// Card
+"METERS CLIMBED" = "攀爬高度 (米)";
+"GOAL REACHED" = "达成目标";
+"TYPE" = "类型";
+"Vertical Sprint" = "垂直冲刺";
+
+// Landmarks
+"Statue of Liberty" = "自由女神像";
+"Great Pyramid of Giza" = "吉萨大金字塔";
+"Eiffel Tower" = "埃菲尔铁塔";
+"Empire State Building" = "帝国大厦";
+"Burj Khalifa" = "哈利法塔";
+"Mount Everest Base Camp" = "珠穆朗玛峰大本营";
+
+// Sync
+"SYNCING" = "同步中...";
+"SYNCED" = "已同步";
+"FAILED" = "同步失败";
+"m/h" = "米/小时";
+"Epic Climb" = "史诗级攀爬";
+"URBAN EXPLORER" = "城市探险家";
+"METERS" = "米";
+"%.1f m" = "%.1f 米";
+"%.0f m" = "%.0f 米";
+"%.0f%%" = "%.0f%%";
+"High Speed Detected" = "检测到高速移动";
+"Tracking paused. Tap Resume when you're ready to continue." = "追踪已暂停。准备好继续时请点击恢复按钮。";

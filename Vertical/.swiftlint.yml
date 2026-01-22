@@ -1,0 +1,28 @@
+disabled_rules:
+  - trailing_whitespace
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - force_unwrapping
+  - vertical_whitespace
+excluded:
+  - Carthage
+  - Pods
+  - SwiftLint
+  - Tests
+force_unwrapping:
+  severity: error # Strictly forbidden in Production
+line_length: 120
+file_length:
+  warning: 500
+  error: 1200
+type_body_length:
+  warning: 300
+  error: 600
+variable_name:
+  min_length: 3 # Avoid x, y, i unless iterating
+  max_length: 50
+identifier_name:
+  allowed_symbols: "_"
+  min_length: 3
+  max_length: 60

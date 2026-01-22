@@ -1,0 +1,3 @@
+0000000000000000000000000000000000000000 0948b27808304b1037a79c2a3b35434d8e9aaa4d xiaowei <metogo@qq.com> 1768660527 +0800	commit (initial): Initial Commit
+0948b27808304b1037a79c2a3b35434d8e9aaa4d 2f1f5ad5375a60628b6320ba198189edbef53b4b xiaowei <metogo@qq.com> 1768897561 +0800	commit: feat: complete Vertical app implementation with TCA, Metal rendering, and i18n support
+2f1f5ad5375a60628b6320ba198189edbef53b4b aaf369b99b1bd61059caa1b654b118f8eebceaf7 xiaowei <metogo@qq.com> 1769051101 +0800	commit: Fix database crashes and refactor for stability

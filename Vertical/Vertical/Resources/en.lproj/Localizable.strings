@@ -1,0 +1,63 @@
+"START TRACKING" = "START TRACKING";
+"STOP TRACKING" = "STOP TRACKING";
+"RESUME TRACKING" = "RESUME TRACKING";
+"AUTO_PAUSED" = "Auto-paused. Stay safe.";
+"VAM" = "VAM";
+"ALTITUDE" = "ALTITUDE";
+"STATUS" = "STATUS";
+"ACTIVE" = "ACTIVE";
+"PAUSED" = "PAUSED";
+"NEXT GOAL" = "NEXT GOAL";
+"UNLOCKED" = "UNLOCKED";
+"HAPTICS ON" = "HAPTICS ON";
+"HAPTICS OFF" = "HAPTICS OFF";
+"at %.0fm" = "at %.0fm";
+
+// Onboarding
+"SAFETY & RISK DISCLAIMER" = "SAFETY & RISK DISCLAIMER";
+"DISCLAIMER_TEXT" = "Vertical is designed for tracking stair climbing in urban environments. Stair climbing is a high-intensity physical activity.";
+"WARNING_1" = "Ensure you are in good physical health before starting any workout.";
+"WARNING_2" = "Be aware of your surroundings. Do not focus on the app while moving on stairs.";
+"WARNING_3" = "The developers are not responsible for any injuries, accidents, or health issues resulting from the use of this app.";
+"WARNING_4" = "By proceeding, you acknowledge these risks and agree to use the app responsibly.";
+"I UNDERSTAND & AGREE" = "I UNDERSTAND & AGREE";
+
+// Result
+"SUMMARY" = "SUMMARY";
+"SESSION SUMMARY" = "SESSION SUMMARY";
+"TOTAL CLIMB" = "TOTAL CLIMB";
+"MAX VAM" = "MAX VAM";
+"READINGS" = "READINGS";
+"DONE" = "DONE";
+"SHARE" = "SHARE";
+"DRAG TO ROTATE DATA PATH" = "DRAG TO ROTATE DATA PATH";
+"PRIVACY ON (HIDDEN START/END)" = "PRIVACY ON (HIDDEN START/END)";
+"PRIVACY OFF (SHOW FULL PATH)" = "PRIVACY OFF (SHOW FULL PATH)";
+
+// Card
+"METERS CLIMBED" = "METERS CLIMBED";
+"GOAL REACHED" = "GOAL REACHED";
+"TYPE" = "TYPE";
+"Vertical Sprint" = "Vertical Sprint";
+
+// Landmarks
+"Statue of Liberty" = "Statue of Liberty";
+"Great Pyramid of Giza" = "Great Pyramid of Giza";
+"Eiffel Tower" = "Eiffel Tower";
+"Empire State Building" = "Empire State Building";
+"Burj Khalifa" = "Burj Khalifa";
+"Mount Everest Base Camp" = "Mount Everest Base Camp";
+
+// Sync
+"SYNCING" = "SYNCING...";
+"SYNCED" = "SYNCED";
+"FAILED" = "FAILED";
+"m/h" = "m/h";
+"Epic Climb" = "Epic Climb";
+"URBAN EXPLORER" = "URBAN EXPLORER";
+"METERS" = "METERS";
+"%.1f m" = "%.1f m";
+"%.0f m" = "%.0f m";
+"%.0f%%" = "%.0f%%";
+"High Speed Detected" = "High Speed Detected";
+"Tracking paused. Tap Resume when you're ready to continue." = "Tracking paused. Tap Resume when you're ready to continue.";
