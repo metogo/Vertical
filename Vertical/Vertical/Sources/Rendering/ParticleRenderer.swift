@@ -123,17 +123,12 @@ final class ParticleRenderer: NSObject {
     }
     
     private func initializeParticles() {
-        // Initialize first buffer
-        let firstBuffer = particleBuffers[0]
-        let particles = firstBuffer.contents().bindMemory(to: Particle.self, capacity: ParticleConfiguration.particleCount)
-        for i in 0..<ParticleConfiguration.particleCount {
-            particles[i] = Particle.random()
-        }
-        
-        // Copy to other buffers for consistency
-        let size = MemoryLayout<Particle>.stride * ParticleConfiguration.particleCount
-        for i in 1..<particleBuffers.count {
-            memcpy(particleBuffers[i].contents(), firstBuffer.contents(), size)
+        // Initialize all buffers to ensure consistent state
+        for buffer in particleBuffers {
+            let particles = buffer.contents().bindMemory(to: Particle.self, capacity: ParticleConfiguration.particleCount)
+            for i in 0..<ParticleConfiguration.particleCount {
+                particles[i] = Particle.random()
+            }
         }
     }
 }
@@ -156,9 +151,12 @@ extension ParticleRenderer: MTKViewDelegate {
             return
         }
         
-        // Calculate delta time
+        // Ensure valid delta time even after suspension
         let currentTime = CACurrentMediaTime()
-        let deltaTime = lastUpdateTime == 0 ? 0.016 : Float(currentTime - lastUpdateTime)
+        var deltaTime = lastUpdateTime == 0 ? 0.016 : Float(currentTime - lastUpdateTime)
+        if deltaTime > 0.5 { // Cap delta time for resume from background
+             deltaTime = 0.016
+        }
         lastUpdateTime = currentTime
         
         // Read VAM thread-safely
