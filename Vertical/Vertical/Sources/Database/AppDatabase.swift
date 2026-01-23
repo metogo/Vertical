@@ -15,12 +15,16 @@ enum DatabaseError: Error, LocalizedError {
 }
 
 /// Application database manager responsible for migrations and providing database access.
-/// Uses DatabaseQueue for maximum stability on real devices.
 final class AppDatabase: Sendable {
-    // Single shared instance
+    // Single shared instance with early initialization
     static let shared: AppDatabase = {
+        print("🏗 AppDatabase: shared instance initializing...")
         do {
-            return try AppDatabase(path: AppDatabase.defaultDatabasePath())
+            let path = try AppDatabase.defaultDatabasePath()
+            print("🏗 AppDatabase: Using path: \(path)")
+            let db = try AppDatabase(path: path)
+            print("🏗 AppDatabase: INIT SUCCESS")
+            return db
         } catch {
             print("❌ DATABASE CRITICAL ERROR: \(error)")
             fatalError("Database initialization failed: \(error)")
@@ -32,11 +36,8 @@ final class AppDatabase: Sendable {
     private static let migrator: DatabaseMigrator = {
         var migrator = DatabaseMigrator()
         
-        #if DEBUG
-        migrator.eraseDatabaseOnSchemaChange = true
-        #endif
-        
         migrator.registerMigration("create_v1") { db in
+            print("🏗 AppDatabase: Migrating v1...")
             try db.create(table: "sensor_readings") { t in
                 t.autoIncrementedPrimaryKey("id")
                 t.column("sessionId", .text).indexed()
@@ -54,6 +55,7 @@ final class AppDatabase: Sendable {
                 t.column("readingsCount", .integer).notNull()
                 t.column("isSynced", .boolean).notNull().defaults(to: false)
             }
+            print("🏗 AppDatabase: Migration v1 complete.")
         }
         
         migrator.registerMigration("add_ampk_column") { db in
@@ -76,17 +78,21 @@ final class AppDatabase: Sendable {
     private init(path: String) throws {
         var config = Configuration()
         config.label = "AppDatabase"
-        // Traditional journaling is more stable for many small writes on mobile
+        
+        // WAL mode is essential for modern concurrency
         config.prepareDatabase { db in
-            try? db.execute(sql: "PRAGMA journal_mode = DELETE")
+            try? db.execute(sql: "PRAGMA journal_mode = WAL")
+            try? db.execute(sql: "PRAGMA synchronous = NORMAL")
         }
         
         if path == ":memory:" {
             dbWriter = try DatabaseQueue(configuration: config)
         } else {
+            // Using DatabaseQueue for absolute serial safety to debug the hang
             dbWriter = try DatabaseQueue(path: path, configuration: config)
         }
         
+        print("🏗 AppDatabase: Running migrations...")
         try AppDatabase.migrator.migrate(dbWriter)
     }
     
@@ -94,22 +100,20 @@ final class AppDatabase: Sendable {
         let fileManager = FileManager.default
         let appSupportURL = try fileManager.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         let directoryURL = appSupportURL.appendingPathComponent("Database", isDirectory: true)
-        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        
+        if !fileManager.fileExists(atPath: directoryURL.path) {
+            print("🏗 AppDatabase: Creating database directory...")
+            try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        }
+        
         return directoryURL.appendingPathComponent("vertical.sqlite").path
     }
     
     // MARK: - Public API
     
-    func save(
-        timestamp: Double,
-        pressure: Double,
-        altitude: Double,
-        sessionId: String?
-    ) throws {
-        // Force strings to be copied as independent values BEFORE closure capture
-        // usage of interpolation ensures a new string buffer is created
+    func save(timestamp: Double, pressure: Double, altitude: Double, sessionId: String?) throws {
         let localSid = sessionId.map { "\($0)" }
-        
+        // print("💾 AppDatabase.save(sid: \(localSid ?? "nil"))") // Silenced
         try dbWriter.write { db in
             let record = SensorReadingRecord(
                 sessionId: localSid,
@@ -119,6 +123,32 @@ final class AppDatabase: Sendable {
             )
             try record.insert(db)
         }
+    }
+    
+    func saveSession(id: String, startDate: Double, endDate: Double?, totalClimb: Double, maxVam: Double, readingsCount: Int, isSynced: Bool, isAMPKActivated: Bool, mitochondrialIndex: Double, rerEstimation: Double, autophagyDepth: Double) throws {
+        print("💾 AppDatabase: saveSession starting for \(id)")
+        let localId = "\(id)"
+        
+        print("💾 AppDatabase: attempting to enter dbWriter.write...")
+        try dbWriter.write { db in
+            print("💾 AppDatabase: INSIDE write block for \(localId)")
+            var session = SessionRecord(
+                id: localId,
+                startDate: Date(timeIntervalSince1970: startDate),
+                endDate: endDate.map { Date(timeIntervalSince1970: $0) },
+                totalClimb: totalClimb,
+                maxVam: maxVam,
+                readingsCount: readingsCount,
+                isSynced: isSynced,
+                isAMPKActivated: isAMPKActivated,
+                mitochondrialIndex: mitochondrialIndex,
+                rerEstimation: rerEstimation,
+                autophagyDepth: autophagyDepth
+            )
+            try session.save(db)
+            print("💾 AppDatabase: session.save(db) executed.")
+        }
+        print("💾 AppDatabase: saveSession FINISHED for \(localId)")
     }
     
     func fetchAll() throws -> [SensorReading] {
@@ -149,39 +179,6 @@ final class AppDatabase: Sendable {
                 .order(SensorReadingRecord.Columns.timestamp)
                 .fetchAll(db)
                 .map { $0.toSensorReading() }
-        }
-    }
-    func saveSession(
-        id: String,
-        startDate: Double,
-        endDate: Double?,
-        totalClimb: Double,
-        maxVam: Double,
-        readingsCount: Int,
-        isSynced: Bool,
-        isAMPKActivated: Bool,
-        mitochondrialIndex: Double,
-        rerEstimation: Double,
-        autophagyDepth: Double
-    ) throws {
-        // Deep copy of strings via interpolation
-        let localId = "\(id)"
-        
-        try dbWriter.write { db in
-            var session = SessionRecord(
-                id: localId,
-                startDate: Date(timeIntervalSince1970: startDate),
-                endDate: endDate.map { Date(timeIntervalSince1970: $0) },
-                totalClimb: totalClimb,
-                maxVam: maxVam,
-                readingsCount: readingsCount,
-                isSynced: isSynced,
-                isAMPKActivated: isAMPKActivated,
-                mitochondrialIndex: mitochondrialIndex,
-                rerEstimation: rerEstimation,
-                autophagyDepth: autophagyDepth
-            )
-            try session.save(db)
         }
     }
     

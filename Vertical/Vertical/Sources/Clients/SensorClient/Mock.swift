@@ -10,6 +10,7 @@ extension SensorClient {
         return Self(
             altitudeStream: { altitudeStream },
             motionStream: { .finished },
+            queryHistoricalFloors: { _, _ in 0 },
             stopMonitoring: {}
         )
     }

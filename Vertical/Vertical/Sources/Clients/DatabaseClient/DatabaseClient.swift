@@ -37,6 +37,9 @@ struct DatabaseClient: Sendable {
     var fetchSessions: @Sendable () async throws -> [SessionRecord] = { [] }
     var fetchUnsyncedSessions: @Sendable () async throws -> [SessionRecord] = { [] }
     var markAsSynced: @Sendable (_ sessionId: String) async throws -> Void
+    
+    /// Warm up the database (initializes the shared instance)
+    var ping: @Sendable () async -> Void
 }
 
 extension DependencyValues {
@@ -60,12 +63,14 @@ extension DatabaseClient: DependencyKey {
         saveSession: { _, _, _, _, _, _, _, _, _, _, _ in print("📦 DB: saveSession skipped (simulator)") },
         fetchSessions: { [] },
         fetchUnsyncedSessions: { [] },
-        markAsSynced: { _ in }
+        markAsSynced: { _ in },
+        ping: { }
     )
     #else
     // REAL DEVICE: Use actual database with primitive values for maximum safety
     static let liveValue = Self(
         save: { ts, pr, alt, sid in
+            print("📦 DB: saving sensor reading...")
             try AppDatabase.shared.save(
                 timestamp: ts,
                 pressure: pr,
@@ -86,6 +91,7 @@ extension DatabaseClient: DependencyKey {
             try AppDatabase.shared.deleteAll()
         },
         saveSession: { id, start, end, climb, vam, count, synced, active, mito, rer, autoph in
+            print("📦 DatabaseClient: calling saveSession for \(id)")
             try AppDatabase.shared.saveSession(
                 id: id,
                 startDate: start,
@@ -99,6 +105,7 @@ extension DatabaseClient: DependencyKey {
                 rerEstimation: rer,
                 autophagyDepth: autoph
             )
+            print("📦 DatabaseClient: saveSession call returned for \(id)")
         },
         fetchSessions: {
             try AppDatabase.shared.fetchSessions()
@@ -108,6 +115,11 @@ extension DatabaseClient: DependencyKey {
         },
         markAsSynced: { sessionId in
             try AppDatabase.shared.markAsSynced(sessionId: sessionId)
+        },
+        ping: {
+            print("📦 DatabaseClient: pinging database...")
+            _ = AppDatabase.shared
+            print("📦 DatabaseClient: ping finished")
         }
     )
     #endif
@@ -121,7 +133,8 @@ extension DatabaseClient: DependencyKey {
         saveSession: { _, _, _, _, _, _, _, _, _, _, _ in },
         fetchSessions: { [] },
         fetchUnsyncedSessions: { [] },
-        markAsSynced: { _ in }
+        markAsSynced: { _ in },
+        ping: { }
     )
     
     static let previewValue = Self(
@@ -133,6 +146,7 @@ extension DatabaseClient: DependencyKey {
         saveSession: { _, _, _, _, _, _, _, _, _, _, _ in },
         fetchSessions: { [] },
         fetchUnsyncedSessions: { [] },
-        markAsSynced: { _ in }
+        markAsSynced: { _ in },
+        ping: { }
     )
 }

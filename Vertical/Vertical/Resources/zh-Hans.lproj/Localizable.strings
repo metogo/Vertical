@@ -102,3 +102,6 @@
 "HIDDEN_CLIMB_DETECTED" = "检测到遗漏的攀爬数据";
 "FOUND_FLOORS_OFFLINE %lld" = "在 App 关闭期间，你爬了 %lld 层楼。";
 "SYNC" = "同步";
+"SAVING_DATA" = "正在分析并保存数据...";
+"AMPK_STATUS_ACTIVE" = "代谢状态：已激活 (AMPK ONLINE)";
+"AMPK_STATUS_INACTIVE" = "代谢状态：正在积累刺激...";

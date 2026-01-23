@@ -20,6 +20,7 @@ struct TrackerFeature {
         var maxVam: Double = 0.0
         var sessionReadingsCount: Int = 0
         var hasRequestedNotificationPermission: Bool = false
+        var isSaving: Bool = false
         
         // Haptics and Milestones
         var isHapticEnabled: Bool = true
@@ -218,11 +219,13 @@ struct TrackerFeature {
                 .cancellable(id: "tracker-tracking-streams", cancelInFlight: true)
                 
             case .view(.stopButtonTapped):
+                guard !state.isSaving else { return .none }
                 let sessionId = state.currentSessionId
                 state.isTracking = false
                 state.isPaused = false
+                state.isSaving = true
                 state.vam = 0.0
-                state.currentSessionId = nil
+                // We keep the sessionId until AppReducer captures it for saving
                 logger.info("Stopping tracking session: \(sessionId ?? "nil")")
                 let location = locationClient
                 return .merge(

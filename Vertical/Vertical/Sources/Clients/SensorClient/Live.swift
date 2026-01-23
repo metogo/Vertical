@@ -123,6 +123,7 @@ extension SensorClient: DependencyKey {
                 continuation.finish()
             }
         },
+        queryHistoricalFloors: { _, _ in 5 }, // Preview 5 floors
         stopMonitoring: {}
     )
 }

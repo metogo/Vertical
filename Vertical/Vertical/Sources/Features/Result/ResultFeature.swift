@@ -87,9 +87,12 @@ struct ResultFeature {
                 let sessionId = state.sessionId
                 return .run { send in
                     do {
+                        print("📊 ResultFeature: Fetching readings for session \(sessionId)")
                         let readings = try await databaseClient.fetchSession(sessionId)
+                        print("📊 ResultFeature: Got \(readings.count) readings")
                         await send(.internal(.readingsLoaded(readings)))
                     } catch {
+                        print("❌ ResultFeature: fetchSession error: \(error.localizedDescription)")
                         logger.error("Failed to fetch session readings: \(error.localizedDescription)")
                         await send(.internal(.readingsLoaded([])))
                     }
@@ -113,11 +116,7 @@ struct ResultFeature {
                 }
                 
                 // Load session record to get AMPK status
-                let sessionId = state.sessionId
-                return .run { send in
-                    // In a more robust system, we'd fetch the specific session record here
-                    // to get flags like isAMPKActivated.
-                }
+                // (Already passed from tracker state in this flow)
                 return .none
                 
             case .view(.shareButtonTapped):

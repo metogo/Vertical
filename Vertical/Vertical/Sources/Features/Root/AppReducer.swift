@@ -29,6 +29,7 @@ struct AppReducer {
             case landmarksLoaded([Landmark])
             case showOnboarding
             case syncFinished
+            case sessionSaved(ResultFeature.State)
         }
     }
     
@@ -38,6 +39,13 @@ struct AppReducer {
     @Dependency(\.databaseClient) var databaseClient
     
     var body: some Reducer<State, Action> {
+        Scope(state: \.tracker, action: \.tracker) {
+            TrackerFeature()
+        }
+        Scope(state: \.timeline, action: \.timeline) {
+            TimelineFeature()
+        }
+        
         Reduce { state, action in
             switch action {
             case .view(.onAppear):
@@ -46,7 +54,10 @@ struct AppReducer {
                 guard !state.isInitialized else { return .none }
                 state.isInitialized = true
                 
-                return .run { [landmarkClient, userDefaults] send in
+                return .run { [landmarkClient, userDefaults, databaseClient] send in
+                    // Warm up database
+                    await databaseClient.ping()
+                    
                     // Check if onboarding is needed
                     let agreed = userDefaults.boolForKey(UserDefaultClient.hasAgreedToTermsKey)
                     if !agreed {
@@ -93,28 +104,12 @@ struct AppReducer {
                         rerEstimation: trackerState.rerEstimation,
                         autophagyDepth: trackerState.autophagyDepth
                     )
+                    state.tracker.isSaving = false
+                    state.tracker.currentSessionId = nil
                     return .none
                     #else
-                    state.result = ResultFeature.State(
-                        sessionId: sessionId,
-                        isAMPKActivated: trackerState.isAMPKActivated,
-                        mitochondrialIndex: trackerState.mitochondrialIndex,
-                        rerEstimation: trackerState.rerEstimation,
-                        autophagyDepth: trackerState.autophagyDepth
-                    )
-                    // Create and save session record for sync
-                    let sessionRecord = SessionRecord(
-                        id: sessionId,
-                        startDate: trackerState.startTime ?? Date(),
-                        endDate: Date(),
-                        totalClimb: trackerState.totalClimb,
-                        maxVam: trackerState.maxVam,
-                        readingsCount: trackerState.sessionReadingsCount,
-                        isSynced: false
-                    )
-                    
                     // Capture primitive values BEFORE entering the asynchronous run block
-                    let id = String(sessionId) // Force a copy of the string to be safe
+                    let id = String(sessionId)
                     let startTs = (trackerState.startTime ?? Date()).timeIntervalSince1970
                     let endTs = Date().timeIntervalSince1970
                     let climb = trackerState.totalClimb
@@ -126,57 +121,71 @@ struct AppReducer {
                     let rer = trackerState.rerEstimation
                     let autoph = trackerState.autophagyDepth
                     
-                    return .run { [databaseClient, syncClient] send in
-                        try? await databaseClient.saveSession(
-                            id,
-                            startTs,
-                            endTs,
-                            climb,
-                            vam,
-                            count,
-                            synced,
-                            active,
-                            mito,
-                            rer,
-                            autoph
-                        )
-                        try? await syncClient.sync()
-                        await send(.internal(.syncFinished))
+                    print("🛑 AppReducer: Finalizing session \(id)")
+                    return .run { [databaseClient] send in
+                        print("🚀 AppReducer: Entering .run block for \(id)")
+                        do {
+                            print("🚀 AppReducer: 300ms delay starting...")
+                            try await Task.sleep(nanoseconds: 300_000_000)
+                            
+                            print("🚀 AppReducer: Triggering Task.detached...")
+                            try await Task.detached(priority: .high) {
+                                print("🚀 DETACHED: Thread checking in...")
+                                print("🚀 DETACHED: Accessing AppDatabase.shared...")
+                                let db = AppDatabase.shared
+                                print("🚀 DETACHED: Calling db.saveSession...")
+                                try db.saveSession(
+                                    id: id,
+                                    startDate: startTs,
+                                    endDate: endTs,
+                                    totalClimb: climb,
+                                    maxVam: vam,
+                                    readingsCount: count,
+                                    isSynced: synced,
+                                    isAMPKActivated: active,
+                                    mitochondrialIndex: mito,
+                                    rerEstimation: rer,
+                                    autophagyDepth: autoph
+                                )
+                                print("🚀 DETACHED: db.saveSession returned")
+                            }.value
+                            print("🚀 AppReducer: saveSession SUCCESS")
+                            
+                            let resultState = ResultFeature.State(
+                                sessionId: id,
+                                isAMPKActivated: active,
+                                mitochondrialIndex: mito,
+                                rerEstimation: rer,
+                                autophagyDepth: autoph
+                            )
+                            await send(.internal(.sessionSaved(resultState)))
+                        } catch {
+                            print("❌ AppReducer: SAVE FAILED: \(error.localizedDescription)")
+                            let resultState = ResultFeature.State(sessionId: id)
+                            await send(.internal(.sessionSaved(resultState)))
+                        }
                     }
                     #endif
                 }
                 return .none
-
-            case .tracker:
-                return .none
                 
-            case .timeline:
-                return .none
-                
-            case .result:
-                return .none
-                
-            case .internal(.showOnboarding):
-                state.onboarding = OnboardingFeature.State()
+            case let .internal(.sessionSaved(resultState)):
+                state.result = resultState
+                state.tracker.isSaving = false
+                state.tracker.currentSessionId = nil
                 return .none
                 
             case .onboarding(.presented(.internal(.savedChoice))):
                 state.onboarding = nil
                 return .none
                 
-            case .onboarding:
+            case .internal(.showOnboarding):
+                state.onboarding = OnboardingFeature.State()
                 return .none
-                
-            case .internal:
+
+            case .tracker, .timeline, .result, .onboarding, .internal:
                 return .none
             }
-        }
-        
-        Scope(state: \.tracker, action: \.tracker) {
-            TrackerFeature()
-        }
-        Scope(state: \.timeline, action: \.timeline) {
-            TimelineFeature()
         }
         .ifLet(\.$result, action: \.result) {
             ResultFeature()

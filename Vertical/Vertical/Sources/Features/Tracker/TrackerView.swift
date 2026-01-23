@@ -6,7 +6,33 @@ struct TrackerView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // Paused Banner
+            banners
+            altitudeGauge
+            metabolicIndicator
+            statsDashboard
+            landmarkProgressCard
+            metaVisionDashboard
+            
+            Spacer(minLength: 0)
+            
+            actionControls
+        }
+        .background(Color.black.ignoresSafeArea())
+        .overlay {
+            unlockedLandmarkOverlay
+            savingOverlay
+        }
+        .sheet(isPresented: Binding(
+            get: { store.isScienceBoardPresented },
+            set: { _ in store.send(.view(.infoButtonTapped)) }
+        )) {
+            ScienceBoardView(isAMPKActivated: store.isAMPKActivated)
+        }
+    }
+    
+    @ViewBuilder
+    private var banners: some View {
+        Group {
             if store.isPaused {
                 HStack {
                     Image(systemName: "pause.circle.fill")
@@ -23,7 +49,6 @@ struct TrackerView: View {
                 .padding(.top, 8)
             }
             
-            // Retroactive Session Banner
             if let floors = store.retroactiveSessionFloors {
                 HStack(spacing: 12) {
                     Image(systemName: "clock.arrow.circlepath")
@@ -55,163 +80,172 @@ struct TrackerView: View {
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(.blue.opacity(0.3), lineWidth: 1))
                 .padding(.horizontal)
             }
+        }
+    }
+    
+    @ViewBuilder
+    private var altitudeGauge: some View {
+        VStack(spacing: 0) {
+            Text(String(localized: "ALTITUDE"))
+                .font(.system(size: 10, weight: .black))
+                .foregroundStyle(.white.opacity(0.4))
+                .kerning(4)
             
-            // 1. Primary Altitude Gauge
-            VStack(spacing: 0) {
-                Text(String(localized: "ALTITUDE"))
-                    .font(.system(size: 10, weight: .black))
-                    .foregroundStyle(.white.opacity(0.4))
-                    .kerning(4)
-                
-                RollingNumberView(
-                    value: Int(store.currentAltitude),
-                    font: .system(size: 88, weight: .black, design: .rounded),
-                    fontSize: 88,
-                    minimumDigits: 3
-                )
-                .frame(height: 100)
-                .foregroundStyle(dynamicColor)
-                .shadow(color: dynamicColor.opacity(0.6), radius: 15)
-                .shadow(color: dynamicColor.opacity(0.3), radius: 30)
-                
-                Text(String(localized: "METERS"))
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.4))
-                    .kerning(2)
-            }
-            .padding(24)
-            .background(
-                ZStack {
-                    // Outer glow ring
-                    Circle()
-                        .stroke(dynamicColor.opacity(0.1), lineWidth: 12)
-                    
-                    Circle()
-                        .trim(from: 0, to: min(store.vam / RollingNumberConfiguration.peakVam, 1.0))
-                        .stroke(
-                            AngularGradient(
-                                colors: [dynamicColor.opacity(0.2), dynamicColor],
-                                center: .center,
-                                startAngle: .degrees(-90),
-                                endAngle: .degrees(270)
-                            ),
-                            style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                        )
-                        .rotationEffect(.degrees(-90))
-                        .animation(.spring(response: 0.6, dampingFraction: 0.7), value: store.vam)
-                }
+            RollingNumberView(
+                value: Int(store.currentAltitude),
+                font: .system(size: 88, weight: .black, design: .rounded),
+                fontSize: 88,
+                minimumDigits: 3
             )
-            .padding(.top, 10)
+            .frame(height: 100)
+            .foregroundStyle(dynamicColor)
+            .shadow(color: dynamicColor.opacity(0.6), radius: 15)
+            .shadow(color: dynamicColor.opacity(0.3), radius: 30)
             
-            // 2. Metabolic Stimulus Indicator
-            VStack(spacing: 8) {
-                HStack(spacing: 12) {
-                    HStack(spacing: 8) {
-                        Image(systemName: store.isAMPKActivated ? "flame.fill" : "bolt.heart.fill")
-                            .font(.system(size: 14))
-                            .foregroundStyle(store.isAMPKActivated ? .orange : .white.opacity(0.4))
-                        
-                        Text(store.isAMPKActivated ? "AMPK_ACTIVATED" : "ACTIVATING_AMPK")
-                            .font(.system(size: 10, weight: .black))
-                            .kerning(1.5)
-                            .foregroundStyle(store.isAMPKActivated ? .orange : .white.opacity(0.6))
-                    }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                    .background(
-                        Capsule()
-                            .fill(store.isAMPKActivated ? Color.orange.opacity(0.15) : Color.white.opacity(0.05))
-                            .overlay(Capsule().stroke(store.isAMPKActivated ? Color.orange.opacity(0.4) : Color.white.opacity(0.1), lineWidth: 1))
+            Text(String(localized: "METERS"))
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(.white.opacity(0.4))
+                .kerning(2)
+        }
+        .padding(24)
+        .background(
+            ZStack {
+                Circle()
+                    .stroke(dynamicColor.opacity(0.1), lineWidth: 12)
+                
+                Circle()
+                    .trim(from: 0, to: min(store.vam / RollingNumberConfiguration.peakVam, 1.0))
+                    .stroke(
+                        AngularGradient(
+                            colors: [dynamicColor.opacity(0.2), dynamicColor],
+                            center: .center,
+                            startAngle: .degrees(-90),
+                            endAngle: .degrees(270)
+                        ),
+                        style: StrokeStyle(lineWidth: 4, lineCap: .round)
                     )
-                    
-                    // Science Info Button
-                    Button { store.send(.view(.infoButtonTapped)) } label: {
-                        Image(systemName: "info.circle")
-                            .font(.system(size: 20))
-                            .foregroundStyle(.white.opacity(0.3))
-                    }
-                }
-                
-                // Progress bar
-                if !store.isAMPKActivated && store.isTracking {
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(Color.white.opacity(0.1))
-                            .frame(width: 140, height: 3)
-                        
-                        Capsule()
-                            .fill(LinearGradient(colors: [.orange.opacity(0.6), .orange], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: 140 * CGFloat(min(store.activeClimbDuration / 120.0, 1.0)), height: 3)
-                            .shadow(color: .orange.opacity(0.5), radius: 4)
-                    }
-                    .animation(.linear, value: store.activeClimbDuration)
-                }
+                    .rotationEffect(.degrees(-90))
+                    .animation(.spring(response: 0.6, dampingFraction: 0.7), value: store.vam)
             }
-            .padding(.vertical, 8)
-            
-            // 3. Stats Dashboard Row
+        )
+        .padding(.top, 10)
+    }
+    
+    @ViewBuilder
+    private var metabolicIndicator: some View {
+        VStack(spacing: 8) {
             HStack(spacing: 12) {
-                StatCard(label: "VAM", value: String(format: "%.0f", store.vam), unit: "m/h", color: .pink)
-                
-                // Interactive Toggle Card
-                Button { store.send(.view(.hapticToggleTapped)) } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: store.isHapticEnabled ? "hand.tap.fill" : "hand.tap")
-                            .font(.title3)
-                            .foregroundStyle(store.isHapticEnabled ? .cyan : .white.opacity(0.2))
-                        Text(store.isHapticEnabled ? "HAPTICS_ON" : "HAPTICS_OFF")
-                            .font(.system(size: 8, weight: .black))
-                            .foregroundStyle(store.isHapticEnabled ? .cyan : .white.opacity(0.4))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 60)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.03)))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(store.isHapticEnabled ? .cyan.opacity(0.3) : .clear, lineWidth: 1))
+                HStack(spacing: 8) {
+                    Image(systemName: store.isAMPKActivated ? "flame.fill" : "bolt.heart.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(store.isAMPKActivated ? .orange : .white.opacity(0.4))
+                    
+                    Text(store.isAMPKActivated ? "AMPK_ACTIVATED" : "ACTIVATING_AMPK")
+                        .font(.system(size: 10, weight: .black))
+                        .kerning(1.5)
+                        .foregroundStyle(store.isAMPKActivated ? .orange : .white.opacity(0.6))
                 }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+                .background(
+                    Capsule()
+                        .fill(store.isAMPKActivated ? Color.orange.opacity(0.15) : Color.white.opacity(0.05))
+                        .overlay(Capsule().stroke(store.isAMPKActivated ? Color.orange.opacity(0.4) : Color.white.opacity(0.1), lineWidth: 1))
+                )
                 
-                StatCard(label: "STATUS", value: store.isPaused ? String(localized: "PAUSED") : String(localized: "ACTIVE"), unit: "", color: store.isPaused ? .orange : .cyan)
-            }
-            .padding(.horizontal)
-            
-            // 4. Landmark Progress (HUD Style)
-            landmarkProgressCard
-            
-            // 5. 3D MetaVision Visualizer (Bottom Focus)
-            metaVisionDashboard
-            
-            Spacer(minLength: 0)
-            
-            // 6. Action Controls
-            VStack(spacing: 12) {
-                if store.isPaused {
-                    ActionButton(title: "RESUME_TRACKING", icon: "play.fill", color: .green) {
-                        store.send(.view(.resumeButtonTapped))
-                    }
-                }
-                
-                ActionButton(title: store.isTracking ? "STOP_TRACKING" : "START_TRACKING", 
-                             icon: store.isTracking ? "stop.fill" : "play.fill", 
-                             color: store.isTracking ? .red : .blue) {
-                    store.send(.view(store.isTracking ? .stopButtonTapped : .startButtonTapped))
+                Button { store.send(.view(.infoButtonTapped)) } label: {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.white.opacity(0.3))
                 }
             }
-            .padding(.horizontal)
-            .padding(.bottom, 20)
-        }
-        .background(Color.black.ignoresSafeArea())
-        .overlay {
-            if let landmarkName = store.lastUnlockedLandmarkName {
-                UnlockedLandmarkOverlay(name: landmarkName)
-                    .zIndex(10)
+            
+            if !store.isAMPKActivated && store.isTracking {
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.white.opacity(0.1))
+                        .frame(width: 140, height: 3)
+                    
+                    Capsule()
+                        .fill(LinearGradient(colors: [.orange.opacity(0.6), .orange], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: 140 * CGFloat(min(store.activeClimbDuration / 120.0, 1.0)), height: 3)
+                        .shadow(color: .orange.opacity(0.5), radius: 4)
+                }
+                .animation(.linear, value: store.activeClimbDuration)
             }
         }
-        .sheet(isPresented: Binding(
-            get: { store.isScienceBoardPresented },
-            set: { _ in store.send(.view(.infoButtonTapped)) }
-        )) {
-            ScienceBoardView()
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+        .padding(.vertical, 8)
+    }
+    
+    @ViewBuilder
+    private var statsDashboard: some View {
+        HStack(spacing: 12) {
+            StatCard(label: "VAM", value: String(format: "%.0f", store.vam), unit: "m/h", color: .pink)
+            
+            Button { store.send(.view(.hapticToggleTapped)) } label: {
+                VStack(spacing: 4) {
+                    Image(systemName: store.isHapticEnabled ? "hand.tap.fill" : "hand.tap")
+                        .font(.title3)
+                        .foregroundStyle(store.isHapticEnabled ? .cyan : .white.opacity(0.2))
+                    Text(store.isHapticEnabled ? "HAPTICS_ON" : "HAPTICS_OFF")
+                        .font(.system(size: 8, weight: .black))
+                        .foregroundStyle(store.isHapticEnabled ? .cyan : .white.opacity(0.4))
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 60)
+                .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.03)))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(store.isHapticEnabled ? .cyan.opacity(0.3) : .clear, lineWidth: 1))
+            }
+            
+            StatCard(label: "STATUS", value: store.isPaused ? String(localized: "PAUSED") : String(localized: "ACTIVE"), unit: "", color: store.isPaused ? .orange : .cyan)
+        }
+        .padding(.horizontal)
+    }
+    
+    @ViewBuilder
+    private var actionControls: some View {
+        VStack(spacing: 12) {
+            if store.isPaused {
+                ActionButton(title: "RESUME_TRACKING", icon: "play.fill", color: .green) {
+                    store.send(.view(.resumeButtonTapped))
+                }
+            }
+            
+            ActionButton(title: store.isTracking ? "STOP_TRACKING" : "START_TRACKING", 
+                         icon: store.isTracking ? "stop.fill" : "play.fill", 
+                         color: store.isTracking ? .red : .blue) {
+                store.send(.view(store.isTracking ? .stopButtonTapped : .startButtonTapped))
+            }
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 20)
+    }
+    
+    @ViewBuilder
+    private var unlockedLandmarkOverlay: some View {
+        if let landmarkName = store.lastUnlockedLandmarkName {
+            UnlockedLandmarkOverlay(name: landmarkName)
+                .zIndex(10)
+        }
+    }
+    
+    @ViewBuilder
+    private var savingOverlay: some View {
+        if store.isSaving {
+            ZStack {
+                Color.black.opacity(0.8)
+                VStack(spacing: 20) {
+                    ProgressView()
+                        .tint(.white)
+                        .scaleEffect(1.5)
+                    Text("SAVING_DATA")
+                        .font(.system(size: 14, weight: .black))
+                        .foregroundStyle(.white)
+                        .kerning(1)
+                }
+            }
+            .ignoresSafeArea()
+            .transition(.opacity)
         }
     }
     
@@ -219,62 +253,11 @@ struct TrackerView: View {
     private var metaVisionDashboard: some View {
         VStack(spacing: 0) {
             HStack(spacing: 20) {
-                // 3D Avatar Container
-                ZStack {
-                    // Solid dark background for 3D view
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(Color.black)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 24)
-                                .stroke(
-                                    LinearGradient(colors: [(store.isAMPKActivated ? Color.orange : Color.cyan).opacity(0.3), .clear], startPoint: .topLeading, endPoint: .bottomTrailing),
-                                    lineWidth: 1
-                                )
-                        )
-                    
-                    MetabolicAvatarView(
-                        intensity: store.hrrPercentage,
-                        isAMPKActivated: store.isAMPKActivated
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 24))
-                    
-                    // Scanning HUD Overlay (More subtle)
-                    VStack {
-                        Spacer()
-                        Rectangle()
-                            .fill(LinearGradient(colors: [.clear, (store.isAMPKActivated ? Color.orange : Color.cyan).opacity(0.15), .clear], startPoint: .top, endPoint: .bottom))
-                            .frame(height: 30)
-                            .offset(y: -4)
-                    }
-                }
-                .frame(width: 140, height: 180)
-                .shadow(color: (store.isAMPKActivated ? Color.orange : Color.cyan).opacity(0.15), radius: 15)
-                
-                // Detailed Biological Indicators
-                VStack(alignment: .leading, spacing: 18) {
-                    MetabolicIndicator(label: "MITO_GEN", value: String(format: "%.1f", store.mitochondrialIndex), unit: "min", icon: "microbe.fill", color: .green, progress: store.hrrPercentage > 0.7 ? 0.8 : 0.2)
-                    MetabolicIndicator(label: "RER_EST", value: String(format: "%.2f", store.rerEstimation), unit: "", icon: "lungs.fill", color: .blue, progress: (store.rerEstimation - 0.7) / 0.3)
-                    MetabolicIndicator(label: "AUTOPHAGY", value: String(format: "%.1f", store.autophagyDepth), unit: "", icon: "leaf.fill", color: .purple, progress: min(store.autophagyDepth / 100.0, 1.0))
-                }
+                metabolicAvatarContainer
+                biologicalIndicators
             }
             
-            // Heart Rate HUD
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(store.heartRate > 0 ? (store.hrrPercentage > 0.8 ? Color.red : Color.green) : Color.gray)
-                    .frame(width: 6, height: 6)
-                    .shadow(color: (store.hrrPercentage > 0.8 ? Color.red : Color.green).opacity(0.5), radius: 3)
-                
-                Text("\(Int(store.heartRate))")
-                    .font(.system(size: 14, weight: .black, design: .rounded))
-                    .foregroundStyle(.white)
-                
-                Text("BPM")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.3))
-                    .kerning(1)
-            }
-            .padding(.top, 12)
+            heartRateHud
         }
         .padding(20)
         .background(
@@ -286,6 +269,66 @@ struct TrackerView: View {
             }
         )
         .padding(.horizontal)
+    }
+    
+    @ViewBuilder
+    private var metabolicAvatarContainer: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 24)
+                .fill(Color.black)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(
+                            LinearGradient(colors: [(store.isAMPKActivated ? Color.orange : Color.cyan).opacity(0.3), .clear], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 1
+                        )
+                )
+            
+            MetabolicAvatarView(
+                intensity: store.hrrPercentage,
+                isAMPKActivated: store.isAMPKActivated
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 24))
+            
+            VStack {
+                Spacer()
+                Rectangle()
+                    .fill(LinearGradient(colors: [.clear, (store.isAMPKActivated ? Color.orange : Color.cyan).opacity(0.15), .clear], startPoint: .top, endPoint: .bottom))
+                    .frame(height: 30)
+                    .offset(y: -4)
+            }
+        }
+        .frame(width: 140, height: 180)
+        .shadow(color: (store.isAMPKActivated ? Color.orange : Color.cyan).opacity(0.15), radius: 15)
+    }
+    
+    @ViewBuilder
+    private var biologicalIndicators: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            MetabolicIndicator(label: "MITO_GEN", value: String(format: "%.1f", store.mitochondrialIndex), unit: "min", icon: "microbe.fill", color: .green, progress: store.hrrPercentage > 0.7 ? 0.8 : 0.2)
+            MetabolicIndicator(label: "RER_EST", value: String(format: "%.2f", store.rerEstimation), unit: "", icon: "lungs.fill", color: .blue, progress: (store.rerEstimation - 0.7) / 0.3)
+            MetabolicIndicator(label: "AUTOPHAGY", value: String(format: "%.1f", store.autophagyDepth), unit: "", icon: "leaf.fill", color: .purple, progress: min(store.autophagyDepth / 100.0, 1.0))
+        }
+    }
+    
+    @ViewBuilder
+    private var heartRateHud: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(store.heartRate > 0 ? (store.hrrPercentage > 0.8 ? Color.red : Color.green) : Color.gray)
+                .frame(width: 6, height: 6)
+                .shadow(color: (store.hrrPercentage > 0.8 ? Color.red : Color.green).opacity(0.5), radius: 3)
+            
+            Text("\(Int(store.heartRate))")
+                .font(.system(size: 14, weight: .black, design: .rounded))
+                .foregroundStyle(.white)
+            
+            Text("BPM")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(.white.opacity(0.3))
+                .kerning(1)
+        }
+        .padding(.top, 12)
     }
     
     @ViewBuilder
@@ -459,6 +502,8 @@ struct ActionButton: View {
 }
 
 struct ScienceBoardView: View {
+    let isAMPKActivated: Bool
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
@@ -472,6 +517,22 @@ struct ScienceBoardView: View {
                         .frame(height: 2)
                         .frame(width: 100)
                 }
+                
+                // Active Status Badge
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(isAMPKActivated ? Color.orange : Color.gray)
+                        .frame(width: 8, height: 8)
+                        .shadow(color: isAMPKActivated ? Color.orange.opacity(0.8) : Color.clear, radius: 4)
+                    
+                    Text(isAMPKActivated ? "AMPK_STATUS_ACTIVE" : "AMPK_STATUS_INACTIVE")
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundStyle(isAMPKActivated ? .orange : .white.opacity(0.4))
+                        .kerning(1)
+                }
+                .padding(.vertical, 6)
+                .padding(.horizontal, 12)
+                .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.05)))
                 
                 VStack(alignment: .leading, spacing: 20) {
                     ScienceSection(title: "WHAT_IS_AMPK", content: "AMPK_DESCRIPTION", icon: "bolt.fill", color: .orange)

@@ -45,9 +45,12 @@ extension SyncClient: DependencyKey {
                     session.endDate?.timeIntervalSince1970,
                     session.totalClimb,
                     session.maxVam,
-                    session.readingsCount,
+                    session.readingsCount,  
                     session.isSynced,
-                    session.isAMPKActivated
+                    session.isAMPKActivated,
+                    session.mitochondrialIndex,
+                    session.rerEstimation,
+                    session.autophagyDepth
                 )
                 
                 // Decode and save readings

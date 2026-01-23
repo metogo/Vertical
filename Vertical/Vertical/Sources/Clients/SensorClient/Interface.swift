@@ -17,9 +17,8 @@ struct SensorClient {
     var queryHistoricalFloors: @Sendable (Date, Date) async throws -> Int = { _, _ in 0 }
     
     /// Stop all sensor monitoring.
-    var stopMonitoring: @Sendable () async -> Void
+    var stopMonitoring: @Sendable () async -> Void = {}
 }
-
 extension DependencyValues {
     var sensorClient: SensorClient {
         get { self[SensorClient.self] }
