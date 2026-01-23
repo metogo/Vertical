@@ -13,6 +13,9 @@ struct SensorClient {
     /// Start monitoring motion activity (steps, flooring).
     var motionStream: @Sendable () async -> AsyncStream<MotionReading> = { .finished }
     
+    /// Query historical pedometer data for a specific time range.
+    var queryHistoricalFloors: @Sendable (Date, Date) async throws -> Int = { _, _ in 0 }
+    
     /// Stop all sensor monitoring.
     var stopMonitoring: @Sendable () async -> Void
 }

@@ -56,6 +56,20 @@ final class AppDatabase: Sendable {
             }
         }
         
+        migrator.registerMigration("add_ampk_column") { db in
+            try db.alter(table: "sessions") { t in
+                t.add(column: "isAMPKActivated", .boolean).notNull().defaults(to: false)
+            }
+        }
+        
+        migrator.registerMigration("add_metabolic_columns") { db in
+            try db.alter(table: "sessions") { t in
+                t.add(column: "mitochondrialIndex", .double).notNull().defaults(to: 0.0)
+                t.add(column: "rerEstimation", .double).notNull().defaults(to: 0.0)
+                t.add(column: "autophagyDepth", .double).notNull().defaults(to: 0.0)
+            }
+        }
+        
         return migrator
     }()
     
@@ -137,7 +151,6 @@ final class AppDatabase: Sendable {
                 .map { $0.toSensorReading() }
         }
     }
-    
     func saveSession(
         id: String,
         startDate: Double,
@@ -145,7 +158,11 @@ final class AppDatabase: Sendable {
         totalClimb: Double,
         maxVam: Double,
         readingsCount: Int,
-        isSynced: Bool
+        isSynced: Bool,
+        isAMPKActivated: Bool,
+        mitochondrialIndex: Double,
+        rerEstimation: Double,
+        autophagyDepth: Double
     ) throws {
         // Deep copy of strings via interpolation
         let localId = "\(id)"
@@ -158,7 +175,11 @@ final class AppDatabase: Sendable {
                 totalClimb: totalClimb,
                 maxVam: maxVam,
                 readingsCount: readingsCount,
-                isSynced: isSynced
+                isSynced: isSynced,
+                isAMPKActivated: isAMPKActivated,
+                mitochondrialIndex: mitochondrialIndex,
+                rerEstimation: rerEstimation,
+                autophagyDepth: autophagyDepth
             )
             try session.save(db)
         }

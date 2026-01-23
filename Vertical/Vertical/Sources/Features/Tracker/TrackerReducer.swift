@@ -28,12 +28,33 @@ struct TrackerFeature {
         var landmarks: [Landmark] = []
         var lastUnlockedLandmarkName: String? = nil
         
+        // Metabolic Activity (AMPK & MetaVision)
+        var activeClimbDuration: TimeInterval = 0.0
+        var isAMPKActivated: Bool = false
+        var isScienceBoardPresented: Bool = false
+        var retroactiveSessionFloors: Int? = nil
+        
+        // Real-time Bio-metrics
+        var heartRate: Double = 0.0
+        var hrrPercentage: Double = 0.0
+        var mitochondrialIndex: Double = 0.0 // Duration in target zone
+        var rerEstimation: Double = 0.85     // Respiratory Exchange Ratio
+        var autophagyDepth: Double = 0.0     // Cumulative autophagy stimulus
+        
+        // User Bio-profile (for Karvonen)
+        var userAge: Int = 30
+        var userRestHR: Double = 60.0
+        
+        var maxHR: Double { 220.0 - Double(userAge) }
+        
         // Configuration constants
         static let windowDuration: TimeInterval = 10.0
         static let minimumWindowForCalculation: TimeInterval = 3.0
         static let minimumReadingsForCalculation = 3
         static let hapticInterval: Double = 3.0 // meters (approx 1 floor)
         static let unlockMessageDuration: UInt64 = 3_000_000_000 // 3 seconds in nanoseconds
+        static let amkpActivationThreshold: TimeInterval = 120.0 // 2 minutes (120s) for metabolic activation
+        static let amkpVamThreshold: Double = 300.0 // meters/hour to be considered "active"
         
         /// The next landmark to reach
         var nextLandmark: Landmark? {
@@ -66,13 +87,18 @@ struct TrackerFeature {
             case hapticToggleTapped
             case onAppear
             case clearUnlockMessage
+            case infoButtonTapped
+            case retroactiveDismissTapped
         }
         
         enum InternalAction {
             case altitudeReceived(SensorReading)
+            case heartRateReceived(Double)
             case autoPauseTriggered(reading: SensorReading)
             case notificationPermissionResult(Bool)
             case setLandmarks([Landmark])
+            case checkRetroactiveTracking
+            case retroactiveFloorsFound(Int)
         }
     }
     
@@ -82,13 +108,14 @@ struct TrackerFeature {
     @Dependency(\.notificationClient) var notificationClient
     @Dependency(\.hapticClient) var hapticClient
     @Dependency(\.landmarkClient) var landmarkClient
+    @Dependency(\.healthClient) var healthClient
     @Dependency(\.uuid) var uuid
     
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
             case .view(.onAppear):
-                return .none
+                return .send(.internal(.checkRetroactiveTracking))
                 
             case let .internal(.setLandmarks(landmarks)):
                 state.landmarks = landmarks
@@ -102,6 +129,39 @@ struct TrackerFeature {
                 state.isHapticEnabled.toggle()
                 return .none
                 
+            case .view(.infoButtonTapped):
+                state.isScienceBoardPresented.toggle()
+                return .none
+                
+            case .view(.retroactiveDismissTapped):
+                let floors = state.retroactiveSessionFloors ?? 0
+                state.retroactiveSessionFloors = nil
+                
+                if floors > 0 {
+                    // Save a "Shadow Session" representing the offline climbing
+                    let id = "OFFLINE-\(UUID().uuidString.prefix(8))"
+                    let endTs = Date().timeIntervalSince1970
+                    let startTs = endTs - (3600 * 2) // Assume it happened in the last 2 hours for now
+                    let climb = Double(floors) * 3.0 // 3m per floor
+                    
+                    return .run { [databaseClient] _ in
+                        try? await databaseClient.saveSession(
+                            id,
+                            startTs,
+                            endTs,
+                            climb,
+                            0.0, // VAM unknown
+                            0,   // Readings count unknown
+                            false,
+                            false, // AMPK unknown
+                            0.0,
+                            0.85,
+                            0.0
+                        )
+                    }
+                }
+                return .none
+                
             case .view(.startButtonTapped):
                 state.isTracking = true
                 state.isPaused = false
@@ -112,38 +172,50 @@ struct TrackerFeature {
                 state.sessionReadingsCount = 0
                 state.lastHapticAltitude = 0.0
                 state.reachedLandmarkIds = []
+                state.activeClimbDuration = 0.0
+                state.isAMPKActivated = false
                 state.startTime = Date()
                 state.currentSessionId = uuid().uuidString
                 let sessionId = state.currentSessionId
                 logger.info("Starting tracking session: \(sessionId ?? "nil")")
                 let location = locationClient
                 let sensor = sensorClient
+                let health = healthClient
+                
                 return .run { send in
                     await location.startMonitoring()
+                    _ = await health.requestPermission()
                     
-                    #if targetEnvironment(simulator)
-                    // SIMULATOR: Skip SensorClient, use direct demo mode
-                    logger.info("📍 Simulator detected. Running Demo Mode.")
-                    var alt = 0.0
-                    var loopCount = 0
-                    while true {
-                        loopCount += 1
-                        print("🔄 Demo loop iteration \(loopCount), sleeping...")
-                        try? await Task.sleep(nanoseconds: 500_000_000)
-                        alt += 0.75
-                        print("🔄 Demo loop \(loopCount): altitude = \(alt)m, sending action...")
-                        let reading = SensorReading(timestamp: Date(), pressure: 101.3, relativeAltitude: alt)
-                        await send(.internal(.altitudeReceived(reading)))
-                        print("🔄 Demo loop \(loopCount): action sent successfully")
+                    await withTaskGroup(of: Void.self) { group in
+                        // Heart Rate Stream
+                        group.addTask {
+                            for await hr in await health.heartRateStream() {
+                                await send(.internal(.heartRateReceived(hr)))
+                            }
+                        }
+                        
+                        // Altitude Stream
+                        group.addTask {
+                            #if targetEnvironment(simulator)
+                            // SIMULATOR: Skip SensorClient, use direct demo mode
+                            logger.info("📍 Simulator detected. Running Demo Mode.")
+                            var alt = 0.0
+                            while true {
+                                try? await Task.sleep(nanoseconds: 500_000_000)
+                                alt += 0.75
+                                let reading = SensorReading(timestamp: Date(), pressure: 101.3, relativeAltitude: alt)
+                                await send(.internal(.altitudeReceived(reading)))
+                            }
+                            #else
+                            // REAL DEVICE: Use actual sensor
+                            for await reading in await sensor.altitudeStream() {
+                                await send(.internal(.altitudeReceived(reading)))
+                            }
+                            #endif
+                        }
                     }
-                    #else
-                    // REAL DEVICE: Use actual sensor
-                    for await reading in await sensor.altitudeStream() {
-                        await send(.internal(.altitudeReceived(reading)))
-                    }
-                    #endif
                 }
-                .cancellable(id: "tracker-altitude-stream", cancelInFlight: true)
+                .cancellable(id: "tracker-tracking-streams", cancelInFlight: true)
                 
             case .view(.stopButtonTapped):
                 let sessionId = state.currentSessionId
@@ -154,7 +226,7 @@ struct TrackerFeature {
                 logger.info("Stopping tracking session: \(sessionId ?? "nil")")
                 let location = locationClient
                 return .merge(
-                    .cancel(id: "tracker-altitude-stream"),
+                    .cancel(id: "tracker-tracking-streams"),
                     .run { _ in await location.stopMonitoring() }
                 )
                 
@@ -277,6 +349,7 @@ struct TrackerFeature {
                     return .merge(hapticEffects + [saveEffect])
                 }
                 
+                
                 let altitudeDelta = last.relativeAltitude - first.relativeAltitude
                 // VAM is meters per hour, capped at 0 for ascent-only
                 let calculatedVam = (altitudeDelta / timeDelta) * 3600
@@ -284,8 +357,82 @@ struct TrackerFeature {
                 state.maxVam = max(state.maxVam, state.vam)
                 print("📊 VAM CALCULATED: altDelta=\(altitudeDelta)m, timeDelta=\(timeDelta)s, VAM=\(state.vam) m/h")
                 
+                // Track AMPK Activation
+                if state.vam >= State.amkpVamThreshold {
+                    // Get time delta since last reading
+                    if state.altitudeHistory.count >= 2 {
+                        let lastIdx = state.altitudeHistory.count - 1
+                        let delta = state.altitudeHistory[lastIdx].timestamp.timeIntervalSince(state.altitudeHistory[lastIdx-1].timestamp)
+                        state.activeClimbDuration += delta
+                    }
+                } else {
+                    // Decay the active duration if we slow down or stop
+                    state.activeClimbDuration = max(0, state.activeClimbDuration - 1.0)
+                }
+                
+                // Trigger activation
+                let previouslyActivated = state.isAMPKActivated
+                state.isAMPKActivated = state.activeClimbDuration >= State.amkpActivationThreshold
+                
+                if state.isAMPKActivated && !previouslyActivated {
+                    logger.info("🔥 AMPK ACTIVATED: Metabolic health benefits achieved!")
+                    let client = hapticClient
+                    hapticEffects.append(.run { _ in await client.notification(.warning) }) // Double pulse for activation
+                }
+                
                 // Persist reading to database
                 return .merge(hapticEffects + [saveEffect])
+                
+            case .internal(.checkRetroactiveTracking):
+                return .run { [sensorClient] send in
+                    // Query last 24 hours for "hidden" climbs
+                    let end = Date()
+                    let start = end.addingTimeInterval(-24 * 3600)
+                    do {
+                        let floors = try await sensorClient.queryHistoricalFloors(start, end)
+                        if floors > 3 {
+                            await send(.internal(.retroactiveFloorsFound(floors)))
+                        }
+                    } catch {
+                        print("❌ Retroactive query failed: \(error.localizedDescription)")
+                    }
+                }
+                
+            case let .internal(.retroactiveFloorsFound(floors)):
+                // If we aren't already tracking, show the retroactive banner
+                if !state.isTracking {
+                    state.retroactiveSessionFloors = floors
+                }
+                return .none
+
+            case let .internal(.heartRateReceived(hr)):
+                state.heartRate = hr
+                
+                // Karvonen Formula: HRR% = (Current HR - Rest HR) / (Max HR - Rest HR)
+                let hrrRange = state.maxHR - state.userRestHR
+                if hrrRange > 0 {
+                    state.hrrPercentage = max(0, min(1.0, (hr - state.userRestHR) / hrrRange))
+                }
+                
+                // Update Metabolic Metrics based on HRR%
+                // 1. Mitochondrial Index (Time in 75%-90% zone)
+                if state.hrrPercentage >= 0.75 && state.hrrPercentage <= 0.90 {
+                    // Assuming updates are ~1s apart
+                    state.mitochondrialIndex += 1.0 / 60.0 // Add as minutes
+                }
+                
+                // 2. RER Estimation (0.7 to 1.0)
+                // Linear map: 40% HRR -> 0.7, 100% HRR -> 1.0
+                let rerRatio = (state.hrrPercentage - 0.4) / (1.0 - 0.4)
+                state.rerEstimation = 0.7 + max(0, min(0.3, rerRatio * 0.3))
+                
+                // 3. Autophagy Depth (Cumulative stimulus)
+                // High intensity over time triggers autophagy. Exponential weighting for depth.
+                if state.hrrPercentage > 0.6 {
+                    state.autophagyDepth += pow(state.hrrPercentage, 3) * 0.1
+                }
+                
+                return .none
 
                 
             case let .internal(.autoPauseTriggered(reading)):

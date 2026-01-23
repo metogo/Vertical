@@ -46,7 +46,7 @@ struct ParticleUniforms {
     var deltaTime: Float            // 4 bytes
     /// Color interpolation factor (0 = blue, 1 = pink)
     var colorFactor: Float          // 4 bytes
-    /// Padding for 16-byte alignment
-    var padding: Float = 0          // 4 bytes
+    /// Metabolic activation factor (0.0 to 1.0)
+    var activationFactor: Float     // 4 bytes
     // Total: 16 bytes (aligned)
 }

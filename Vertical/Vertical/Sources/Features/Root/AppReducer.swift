@@ -87,11 +87,21 @@ struct AppReducer {
                     state.result = ResultFeature.State(
                         sessionId: sessionId,
                         readings: trackerState.altitudeHistory,
-                        totalClimb: trackerState.totalClimb
+                        totalClimb: trackerState.totalClimb,
+                        isAMPKActivated: trackerState.isAMPKActivated,
+                        mitochondrialIndex: trackerState.mitochondrialIndex,
+                        rerEstimation: trackerState.rerEstimation,
+                        autophagyDepth: trackerState.autophagyDepth
                     )
                     return .none
                     #else
-                    state.result = ResultFeature.State(sessionId: sessionId)
+                    state.result = ResultFeature.State(
+                        sessionId: sessionId,
+                        isAMPKActivated: trackerState.isAMPKActivated,
+                        mitochondrialIndex: trackerState.mitochondrialIndex,
+                        rerEstimation: trackerState.rerEstimation,
+                        autophagyDepth: trackerState.autophagyDepth
+                    )
                     // Create and save session record for sync
                     let sessionRecord = SessionRecord(
                         id: sessionId,
@@ -111,6 +121,10 @@ struct AppReducer {
                     let vam = trackerState.maxVam
                     let count = trackerState.sessionReadingsCount
                     let synced = false
+                    let active = trackerState.isAMPKActivated
+                    let mito = trackerState.mitochondrialIndex
+                    let rer = trackerState.rerEstimation
+                    let autoph = trackerState.autophagyDepth
                     
                     return .run { [databaseClient, syncClient] send in
                         try? await databaseClient.saveSession(
@@ -120,7 +134,11 @@ struct AppReducer {
                             climb,
                             vam,
                             count,
-                            synced
+                            synced,
+                            active,
+                            mito,
+                            rer,
+                            autoph
                         )
                         try? await syncClient.sync()
                         await send(.internal(.syncFinished))
@@ -192,7 +210,7 @@ struct AppView: View {
             .ignoresSafeArea()
             
             // Deep Background - Particle System
-            MetalParticleView(vam: store.tracker.vam)
+            MetalParticleView(vam: store.tracker.vam, isAMPKActivated: store.tracker.isAMPKActivated)
                 .ignoresSafeArea()
             
             // Background Timeline

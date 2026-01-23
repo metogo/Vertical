@@ -11,8 +11,14 @@ stepsCompleted:
   - step-e-01-discovery
   - step-e-02-review
   - step-e-03-edit
-lastEdited: "2026-01-19"
+lastEdited: "2026-01-22"
 editHistory:
+  - date: "2026-01-22"
+    changes: "Added FR-TC-06 (Retroactive Detection) and FR-TC-07 (Passive Sync) to solve friction in fragmented sessions."
+  - date: "2026-01-22"
+    changes: "Added FR-VS-06 (AMPK Science Board) for metabolic education and concept introduction."
+  - date: "2026-01-22"
+    changes: "Integrated 'AMPK MetaVision 3D' core features, Karvonen heart rate engine, and real-time metabolic visualization requirements."
   - date: "2026-01-19"
     changes: "Added internationalization (i18n) requirements for Chinese and English support."
 ---
@@ -24,50 +30,58 @@ editHistory:
 
 ## Executive Summary
 
-Vertical 是一款专注于爬楼梯/垂直攀升的运动 App，结合极致的数据美学与 3D 可视化能力。它利用气压计与 AI 算法精准记录垂直运动数据，通过“垂直时空轴”和“3D 螺旋轨迹”将枯燥的爬楼转化为具有成就感的云端攀登体验，服务于高效减脂者、城市碎片化健身白领及专业垂直跑者。
+Vertical 是一款专注于垂直攀升的健康管理与运动 App。不同于传统的竞技型运动工具，它利用其独特的 **“AMPK MetaVision 3D”** 引擎，将不可见的分子代谢过程（燃脂、血糖调节、线粒体再生及细胞自噬）进行实地 3D 可视化。
+
+基于斯坦福神经科学教授 Dr. Huberman 等倡导的持续肌肉收缩（AMPK 激活）理念，Vertical 将久坐办公环境下的每一次攀爬微运动转化为高效的代谢干预。用户不仅在纪录高度，更是在实时观察自己身体内部的“数字化孪生”如何进行能量转换与细胞清理，为现代职场人提供极致的生理反馈与科学掌控感。
 
 ## Project Classification
 
 - **Project Type:** Mobile App
-- **Domain:** Sport / Fitness / Health
+- **Domain:** Sport / Fitness / Health / Longevity
 - **Complexity:** Medium
-- **Context:** Greenfield
+- **Context:** Greenfield (Pivoted to Wellness/Metabolic Health)
 
 ## Success Criteria
 
 ### User Success
 
-- **成就感 (Sense of Achievement)**: 用户通过“垂直时空轴”和解锁 3D 地标（如埃菲尔铁塔），感受到运动的史诗感，消除枯燥。
-- **减脂效率 (Efficiency)**: 用户能够直观看到 VAM (垂直升速) 和热量消耗，认可爬楼作为高效减脂方式的价值。
-- **社交满足 (Social Satisfaction)**: 生成的高冷、硬核 3D 螺旋轨迹分享卡片被用户主动分享至社交媒体，展示独特运动品味。
+- **代谢激活 (Metabolic Activation)**: 用户通过“少量多次”的攀爬有效地激活 AMPK 路径。
+- **线粒体与自噬达标 (Cellular Health)**: 用户通过追踪“线粒体生成指数”和“自噬触发深度”，量化细胞排毒与动力源扩容的实际进度。
+- **成就感 (Sense of Achievement)**: 通过 3D 数字化孪生人体的视觉爆发（如 GLUT4 吸糖特效），感受到每一米运动对生理指标的即时改善。
+- **减脂效率 (Efficiency)**: 基于 $HRR\%$ 计算的实时 RER 估算，让用户明确当前的脂肪氧化状态。
 
 ### Business Success
 
-- **用户增长 (User Growth)**: 早期依靠 3D 轨迹图的社交裂变实现自然增长。
-- **留存率 (Retention)**: 目标用户（如城市白领）形成每周 2-3 次的稳定爬楼习惯。
+- **用户习惯 (Habit Formation)**: 目标用户（如写字楼白领）形成“见梯即爬”的碎片化运动习惯，每日启动频次平均 > 3 次。
 
 ### Technical Success
 
-- **数据精准度 (Accuracy)**: 高度记录误差 < 5%，算法能精准识别并剔除电梯升降与下楼数据。
-- **可视化性能 (Performance)**: 3D 螺旋粒子流与地标模型在主流机型上渲染流畅（60fps），无明显发热耗电。
+- **数据精准度 (Accuracy)**: 每一米高度变化的捕捉灵敏度。
+- **UI 响应 (UI Hierarchy)**: 核心高度指标占据 60% 以上视觉重心，VAM 作为辅助动态。
 
 ### Measurable Outcomes
 
-- **核心指标**: 垂直高度记录误差 < 5%。
-- **分享率**: > 20% 的完成运动用户生成并分享轨迹图。
+- **核心指标**: 每日活跃攀爬频次 (Micro-sessions per Day)。
+- **分享率**: > 20% 的用户分享“今日累计高度”达成图。
 
 ## Product Scope
 
 ### MVP - Minimum Viable Product
 
-- **核心记录**: 气压计高度融合算法，实时显示高度、层数、VAM。
-- **主界面**: 垂直时空轴设计，动态粒子流背景。
-- **核心地标**: 首发内置 3-5 个经典地标（如圣彼得大教堂、自由女神像、埃菲尔铁塔）。
-- **分享**: 基于 GPS 聚簇点的 3D 螺旋轨迹生成与分享卡片。
-- **国际化支持**: 应用界面、语音播报及推送支持中英文切换。
-- **基础设置**: 楼层高度校准及语言偏好设置。
+### MVP - Minimum Viable Product
+
+- **核心记录**: 气压计高度融合算法，以“当前累计高度”为最优先展示指标，实时显示层数、VAM。
+- **3D 实时代谢看板 (MetaVision)**: 屏幕中央显示 **3D 数字化孪生人体模型**。基于 $HRR\%$ 实时渲染：
+  - **脂肪分解金流**: 心率 45%-60% 区间触发。
+  - **GLUT4 吸糖特效**: 心率 60%-75% 区间触发。
+- **分享**: 支持“实时代谢报告”与 3D 轨迹合成分享卡片。
+- **核心地标**: 内置 5-10 个高度锚点。
 
 ### Growth Features (Post-MVP)
+
+- **细胞清理监控**: 线粒体再生指数与自噬触发深度追踪。
+- **空腹自噬模式**: 配合禁食计时器，优化自噬触发曲线。
+- **社交排行**: 基于线粒体积攒指数的排行榜。
 
 - **社交排行**: 好友间的垂直高度排行榜。
 - **更多地标**: 扩展全球著名高层建筑地标包。
@@ -80,25 +94,24 @@ Vertical 是一款专注于爬楼梯/垂直攀升的运动 App，结合极致的
 
 ## User Journeys
 
-### 1. Liam - 高效减脂者 (Primary User - Success Path)
+### 1. Sarah - 代谢微干预 (Primary User - Success Path)
 
-**Story**: 28岁广告人，追求“短平快”的高强度训练。
+**Story**: 32岁金融分析师，深度认同“微运动”对控制血糖和胰岛素水平的价值。
 **The Journey**:
 
-1.  **开场**: 晚上加完班，Liam 跳过电梯，打开 Vertical。主界面的垂直中轴线微弱脉冲，激发了他的挑战欲。点击“向上”开始。
-2.  **攀爬**: 爬到 10 楼，TTS 语音播报（根据设定的语言，如 "10 Floors, VAM 1200" 或 "10层，垂直升速 1200"），激励他保持速度。
-3.  **高潮**: 20 楼力竭时，看到屏幕上荧光粒子流速加快，3D 螺旋线缠绕在“虚拟圣彼得大教堂”塔尖，提示“还有 30 米登顶”。这种视觉化的目标感让他咬牙冲刺。
-4.  **结局**: 25 楼结束，生成黑底酷炫 3D 螺旋轨迹图，耗时 18 分, 300 卡, VAM 1350。一键分享到朋友圈，“征服圣彼得”。
+1.  **开场**: 在格子间坐了 45 分钟后，Sarah 收到健康提醒。她走向消防通道。
+2.  **攀爬**: 打开 Vertical，高度读数下方跳动着一个半透明的 3D 人体模型。
+3.  **高潮**: 当她爬升到 8 楼，心率进入 65% $HRR\%$。屏幕上的人体模型肌肉纹理开始发出青色微光（GLUT4 激活特效），提示她肌肉正在高效从血液中抽取葡萄糖。
+4.  **反馈**: 持续爬升 2 分钟后，AMPK 激活徽章点亮。App 提示：“细胞代谢火炉已启动”。
+5.  **结局**: 到达 10 楼，Sarah 看着自己刚才运动生成的“线粒体闪烁”动画，感到前所未有的满足。她分享了一张带有 3D 轨迹和代谢摘要的卡片到动态，配文：“写字楼里的细胞清理”。
 
-### 2. Sarah - 写字楼碎片健身 (Primary User - Edge Case)
+### 2. Liam - 高效减脂者 (Secondary User)
 
-**Story**: 32岁金融分析师，利用午休在公司消防通道透气。
+**Story**: 28岁广告人，追求攀升速度与挑战。
 **The Journey**:
 
-1.  **开场**: 午饭后进入楼梯间，只想轻量活动。
-2.  **下楼插曲**: 爬到 15 楼接到电话需回 10 楼拿文件。Vertical 算法识别到下行气压变化与加速度特征，自动暂停“攀升累计”，语音提示“下行暂停记录”。
-3.  **恢复**: 拿完文件重新上楼，记录自动恢复。
-4.  **结局**: 完成 30 层攀爬，数据干净准确，无下楼噪音数据。
+1.  **攀爬**: Liam 关注 VAM (垂直升速) 以评估训练强度。
+2.  **反馈**: 虽然 VAM 在 UI 上降为次要，但当他冲刺时，高度变化的滚动速度与震动反馈依然能让他感受到肾上腺素。
 
 ### 3. 系统管理员 - 运营后台 (Admin User)
 
@@ -228,20 +241,33 @@ Vertical 是一款专注于爬楼梯/垂直攀升的运动 App，结合极致的
 ### 1. Tracking Core (运动与传感)
 
 - **FR-TC-01**: 用户可以开始一次“垂直攀升”记录，App 必须实时采集气压、加速度传感器数据。
-- **FR-TC-02**: 系统必须能实时计算 VAM (垂直升速)，分辨率为米/小时。
-- **FR-TC-03**: 系统必须能识别“下行”或“电梯”状态，并自动暂停累计高度和 VAM。
-- **FR-TC-04**: 用户可以在无网络环境下完整记录一次运动数据 (Local-First)。
-- **FR-TC-05**: 系统必须在后台（锁屏或切到其他 App）持续记录运动数据。
-- **FR-TC-06**: 系统必须在网络恢复时，自动将本地数据同步至云端。
+- **FR-TC-02**: **指标优先级 (Metric Priority)**: 主界面必须以“当前累计高度 (Current Altitude)”作为第一视觉重心。
+- **FR-TC-03**: 系统必须实时计算 VAM (垂直升速)，作为衡量代谢强度的辅助指标。
+- **FR-TC-04**: 系统必须能识别“下行”或“电梯”状态，并自动暂停累计高度和 VAM，防止代谢数据注流。
+- **FR-TC-05**: **实时代谢映射引擎**: 系统需接入 HealthKit/Google Fit 实时心率，利用卡式公式（Karvonen Formula）计算储备心率百分比（$HRR\%$）：
+  - $HR_{target} = ((MHR - RHR) \times HRR\%) + RHR$
+  - 需自动计算 $MHR$（基于年龄）并允许手动调整 $RHR$。
+- **FR-TC-06**: **追溯性运动检测 (Retroactive Detection)**: App 启动时通过 `CMPedometer` 自动检索过去 24 小时内的离线爬楼记录。若检测到未记录的高质量攀爬，引导用户补入代谢看板。
+- **FR-TC-07**: **健康数据同步 (HealthKit Passive Sync)**: 自动同步 HealthKit 中的“已爬楼层”数据，确保即使用户未手动启动 App，长期的代谢积分（线粒体指数等）依然保持连续。
 
 ### 2. Visual Storytelling (可视化与交互)
 
-- **FR-VS-01**: 用户可以在运动过程中看到基于当前层数映射的“虚拟高度”（如：已到达圣彼得大教堂顶端）。
-- **FR-VS-02**: 用户可以查看本次运动生成的 3D 螺旋轨迹 (DNA Spiral)，支持旋转、缩放。
-- **FR-VS-03**: 用户可以查看基于历史记录生成的“星群地图” (Constellation Map)，所有解锁地标在视觉上相连。
+- **FR-VS-01**: 用户可以在运动过程中看到高度跳动的实时动画，强调“每一步都在增量”。
+- **FR-VS-02**: **AMPK 状态指示器**: 当垂直位移持续超过一定阈值（如 2 分钟时，且心率处于对应区间），UI 展示“代谢激活中”反馈。
+- **FR-VS-05**: **3D 数字化孪生视觉渲染**:
+  - **Fat Burning (45-60% HRR%)**: 在模型腹部与皮下渲染金色能量流。
+  - **Glucose Uptake (60-75% HRR%)**: 肌肉纹理脉冲发光。
+  - **Mito-Biogenesis (75-90% HRR%)**: 全身蓝色微粒（线粒体）高频闪烁。
+  - **Autophagy Pulse (>75% for 30min)**: 模型中心产生向外的全息脉冲波。
+- **FR-VS-06**: **AMPK 科学观察站 (Science Board)**: 在 AMPK 徽章旁提供交互式信息入口。展示碎片化健康知识，解释 AMPK 激活原理及其与 3D 可视化效果的映射关系。
+- **FR-VS-03**: 用户可以查看 3D 螺旋轨迹，但在运动首页，高度数值应盖过轨迹展示。
 - **FR-VS-04**: 用户可以在“高精度模式”和“省电模式”之间切换，前者记录 GPS 轨迹，后者仅记录高度。
 
-### 3. Social & Sharing (社交分享)
+### 3. Data Visualization (代谢量化指标)
+
+- **FR-DV-01**: **线粒体生成指数**: 累计在 75%-90% $HRR\%$ 区间的有效锻炼分钟数。
+- **FR-DV-02**: **脂肪氧化效率 (RER 估算)**: 根据实时心率与呼吸频率估算当前的呼吸交换率。
+- **FR-DV-03**: **自噬触发深度**: 根据心率强度与持续运动时间的积分进行非线性建模展示。
 
 - **FR-SS-01**: 用户可以一键生成本次运动的 3D 轨迹图片或短视频 (Share Card)。
 - **FR-SS-02**: 用户在生成分享卡片时，可以选择“隐藏隐私节点”，系统需自动剔除起点/终点附近的轨迹点。
@@ -271,9 +297,8 @@ Vertical 是一款专注于爬楼梯/垂直攀升的运动 App，结合极致的
 
 ### Performance
 
-- **Frame Rate (FPS)**: 在 High Quality 模式下，3D 直播与轨迹回放界面必须保持 **稳定 60fps** (近 3 年 iPhone/Android 旗舰)。Lower-end 设备降级模式下不低于 30fps。
-- **Launch Time**: 冷启动到“开始运动”按钮可点击，需在 **1.5秒** 内完成。
-- **Sensor Latency**: 气压与高度数据的 UI 刷新延迟 < 200ms。
+- **Performance - 3D Rendering**: 在 3D MetaVision 模式下，必须保持 **稳定 60fps**。渲染性能需针对 Metal (iOS) 和 Vulkan (Android) 进行优化。
+- **Sensor Latency**: 从传感器/健康数据更新到 3D 视觉变化的端到端延迟必须控制在 **150ms** 以内。
 
 ### Battery Efficiency
 

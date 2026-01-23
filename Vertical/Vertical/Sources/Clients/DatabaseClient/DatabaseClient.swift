@@ -28,7 +28,11 @@ struct DatabaseClient: Sendable {
         _ totalClimb: Double,
         _ maxVam: Double,
         _ readingsCount: Int,
-        _ isSynced: Bool
+        _ isSynced: Bool,
+        _ isAMPKActivated: Bool,
+        _ mitochondrialIndex: Double,
+        _ rerEstimation: Double,
+        _ autophagyDepth: Double
     ) async throws -> Void
     var fetchSessions: @Sendable () async throws -> [SessionRecord] = { [] }
     var fetchUnsyncedSessions: @Sendable () async throws -> [SessionRecord] = { [] }
@@ -53,7 +57,7 @@ extension DatabaseClient: DependencyKey {
         fetchSession: { _ in [] },
         fetchRange: { _, _ in [] },
         deleteAll: { },
-        saveSession: { _ in print("📦 DB: saveSession skipped (simulator)") },
+        saveSession: { _, _, _, _, _, _, _, _, _, _, _ in print("📦 DB: saveSession skipped (simulator)") },
         fetchSessions: { [] },
         fetchUnsyncedSessions: { [] },
         markAsSynced: { _ in }
@@ -81,7 +85,7 @@ extension DatabaseClient: DependencyKey {
         deleteAll: {
             try AppDatabase.shared.deleteAll()
         },
-        saveSession: { id, start, end, climb, vam, count, synced in
+        saveSession: { id, start, end, climb, vam, count, synced, active, mito, rer, autoph in
             try AppDatabase.shared.saveSession(
                 id: id,
                 startDate: start,
@@ -89,7 +93,11 @@ extension DatabaseClient: DependencyKey {
                 totalClimb: climb,
                 maxVam: vam,
                 readingsCount: count,
-                isSynced: synced
+                isSynced: synced,
+                isAMPKActivated: active,
+                mitochondrialIndex: mito,
+                rerEstimation: rer,
+                autophagyDepth: autoph
             )
         },
         fetchSessions: {
@@ -110,7 +118,7 @@ extension DatabaseClient: DependencyKey {
         fetchSession: { _ in [] },
         fetchRange: { _, _ in [] },
         deleteAll: { },
-        saveSession: { _, _, _, _, _, _, _ in },
+        saveSession: { _, _, _, _, _, _, _, _, _, _, _ in },
         fetchSessions: { [] },
         fetchUnsyncedSessions: { [] },
         markAsSynced: { _ in }
@@ -122,7 +130,7 @@ extension DatabaseClient: DependencyKey {
         fetchSession: { _ in [] },
         fetchRange: { _, _ in [] },
         deleteAll: { },
-        saveSession: { _, _, _, _, _, _, _ in },
+        saveSession: { _, _, _, _, _, _, _, _, _, _, _ in },
         fetchSessions: { [] },
         fetchUnsyncedSessions: { [] },
         markAsSynced: { _ in }

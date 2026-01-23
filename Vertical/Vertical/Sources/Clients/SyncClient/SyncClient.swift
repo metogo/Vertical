@@ -46,7 +46,8 @@ extension SyncClient: DependencyKey {
                     session.totalClimb,
                     session.maxVam,
                     session.readingsCount,
-                    session.isSynced
+                    session.isSynced,
+                    session.isAMPKActivated
                 )
                 
                 // Decode and save readings

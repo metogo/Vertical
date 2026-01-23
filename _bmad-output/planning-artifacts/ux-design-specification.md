@@ -14,6 +14,7 @@ stepsCompleted:
   - step-12-ux-patterns
   - step-13-responsive-accessibility
   - step-14-complete
+  - metabolic-pivot-update
 inputDocuments:
   - /Users/fanhua/plan/vertical/_bmad-output/planning-artifacts/prd.md
 ---
@@ -31,7 +32,7 @@ inputDocuments:
 
 ### Project Vision
 
-Vertical 将爬楼梯重构为“垂直维度的城市探险”。通过“数据美学”和“3D 可视化”，将枯燥的机械运动转化为具有史诗感和社交价值的“征服与收集”游戏。
+Vertical 将爬楼梯重构为“垂直维度的生理激活工具”。基于 AMPK 代谢干预理念，通过“数据美学”和“3D 可视化”，将碎片化的楼梯攀爬转化为高效的代谢干预与城市探险。
 
 ### Target Users
 
@@ -40,9 +41,9 @@ Vertical 将爬楼梯重构为“垂直维度的城市探险”。通过“数�
 
 ### Key Design Challenges
 
-1.  **Immersive Feedback in Boring Contexts**: 在封闭的楼梯间创造沉浸感，需依赖强视觉（粒子流、动态模糊）和听觉（TTS, Haptics）。
-2.  **Visualizing the Invisible**: 如何将不可见的“气压变化”和“GPS 聚簇”转化为直观的、美观的 3D 螺旋实体。
-3.  **Privacy-First Sharing**: 设计直观的“隐私节点隐藏”交互，建立用户对分享位置数据的信任。
+1.  **Metabolic Feedback Clarity**: 如何直观、实时地告知用户“AMPK 激活”这一生理状态，而不增加认知负担。
+2.  **Immersive Feedback in Boring Contexts**: 在封闭的楼梯间创造沉浸感，需依赖强视觉（粒子流、动态模糊）和听觉（TTS, Haptics）。
+3.  **Visualizing the Invisible**: 如何将不可见的“气压变化”和“代谢水平”转化为直观的、美观的视觉实体。
 
 ### Design Opportunities
 
@@ -82,7 +83,8 @@ Vertical 的核心体验是非侵入式的伴随（Invisible Companion）与爆�
 
 1.  **Vertical Flow**: 交互逻辑沿垂直轴线展开，强化“向上”心智。
 2.  **Cinematic Data**: 用电影感的镜头语言展示运动数据。
-3.  **Silence is Gold**: 除非必要（达成成就/异常状态），否则不打扰用户。
+3.  **Metabolic Rewards**: 将代谢干预过程（AMPK 激活）视觉化为能量爆发。
+4.  **Silence is Gold**: 除非必要（达成成就/异常状态），否则不打扰用户。
 
 ## Desired Emotional Response
 
@@ -163,8 +165,8 @@ Vertical 的核心体验是非侵入式的伴随（Invisible Companion）与爆�
 
 ### 2.1 Defining Experience
 
-**"The Altimeter Heartbeat" (高度计的心跳)**
-一种基于物理位移的非视觉交互。App 是感官的延伸，将高度变化转化为触觉（Haptics）和听觉（Audio）的实时反馈，创造“人机合一”的攀登体验。
+**"The Metabolic Heartbeat" (代谢的心跳)**
+一种基于物理位移的生理反馈。App 是感官的延伸，将高度变化和代谢强度（AMPK 激活）转化为触觉（Haptics）和听觉（Audio）的实时反馈。
 
 ### 2.2 User Mental Model
 
@@ -199,6 +201,7 @@ Vertical 的核心体验是非侵入式的伴随（Invisible Companion）与爆�
   - `Cyan (#00F0FF)`: Primary Action & VAM.
   - `Lime (#39FF14)`: Success & Altitude Gain.
   - `Pink (#FF0099)`: Heart Rate & Milestones.
+  - `Gold (#FFD700)`: **AMPK Activated State**. 用于最高级别的代谢反馈。
 - **Transparency**: 广泛使用 `Opacity 20%-40%` 的 Glassmorphism 来构建 HUD 层，确保不遮挡背后的 3D 场景。
 
 ### Typography System
@@ -263,7 +266,9 @@ graph TD
     G --> H((Pocket Mode Active))
 
     H -->|Altimeter +1 Floor| I[Haptic: Single Thud]
-    H -->|Landmark Reached| J[Haptic: Double Pulse + Audio: 'Eiffel Tower Reached']
+    H -->|Climb Intensity Reached| J[Visual: Cyan Flow -> Golden Glow]
+    J --> J1[Haptic: Double Pulse + Label: AMPK ACTIVATED]
+    H -->|Landmark Reached| K[Haptic: Heavy Pulse + Audio: 'Eiffel Tower Reached']
 
     H -->|Long Press End| K[Interaction: Stop]
     K --> L[Transition: Blackout 0.5s]
@@ -337,16 +342,18 @@ graph TD
 
 - **Purpose**: 运动状态下的核心仪表盘。
 - **Anatomy**:
-  - Primary: VAM (Huge Font).
-  - Secondary: Height / Floors (Medium Font).
-  - Status: Heart Rate Zone (Color Indicator).
-- **States**: Idle (Dimmed) -> Active (Neon Cyan) -> Peak (Neon Pink + Shake).
+  - Primary: VAM (Medium Font).
+  - Primary Hero: Current Altitude (Giant Illuminated Font).
+  - Status: AMPK Indicator (Capsule Badge + Progress Bar).
+- **States**: Idle (Dimmed) -> Active (Neon Cyan) -> Metabolic Activation (Neon Gold/Yellow Gradient).
 
 #### 3. ParticleBackground (Atmosphere)
 
 - **Purpose**: 视觉化“速度”和“高度”。
 - **Tech**: Metal (iOS) / Canvas or Shader (Android).
-- **Logic**: 粒子流速 = VAM / 100。
+- **Logic**:
+  - 粒子流速 = VAM / 100。
+  - 粒子色彩 = 混合蓝色 (Standard) -> 金黄色 (AMPK Activated).
 
 ### Implementation Strategy
 

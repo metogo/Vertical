@@ -77,6 +77,23 @@ extension SensorClient: DependencyKey {
                     continuation.finish()
                 }
             },
+            queryHistoricalFloors: { from, to in
+                let pedometer = CMPedometer()
+                guard CMPedometer.isStepCountingAvailable() else { return 0 }
+                
+                return try await withCheckedThrowingContinuation { continuation in
+                    pedometer.queryPedometerData(from: from, to: to) { data, error in
+                        if let error = error {
+                            continuation.resume(throwing: error)
+                        } else if let data = data {
+                            let floors = data.floorsAscended?.intValue ?? 0
+                            continuation.resume(returning: floors)
+                        } else {
+                            continuation.resume(returning: 0)
+                        }
+                    }
+                }
+            },
             stopMonitoring: {}
         )
     }()

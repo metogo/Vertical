@@ -19,7 +19,7 @@ struct ParticleUniforms {
     float speedMultiplier;
     float deltaTime;
     float colorFactor;
-    float padding;
+    float activationFactor;
 };
 
 struct VertexOut {
@@ -55,18 +55,26 @@ kernel void updateParticles(
         p.velocity.y = 0.3 + fract(sin(float(seed + 3) * 93.456) * 43758.5453) * 0.3;
     }
     
-    // Update position based on velocity and speed multiplier
-    float speed = max(0.5, uniforms.speedMultiplier);
+    // Update position based on velocity, speed multiplier and activation boost
+    float activationBoost = 1.0 + uniforms.activationFactor * 1.5;
+    float speed = max(0.5, uniforms.speedMultiplier) * activationBoost;
     p.position += p.velocity * uniforms.deltaTime * speed;
     
-    // Interpolate color from blue to pink based on colorFactor
-    float3 blueColor = float3(0.2, 0.4, 1.0);
-    float3 pinkColor = float3(1.0, 0.3, 0.6);
-    float3 interpolatedColor = mix(blueColor, pinkColor, uniforms.colorFactor);
+    // Color logic: Blue -> Pink (VAM) -> Gold (AMPK Activation)
+    float3 blueColor = float3(0.1, 0.4, 1.0);
+    float3 pinkColor = float3(1.0, 0.2, 0.6);
+    float3 activeColor = float3(1.0, 0.8, 0.2); // Golden Flame
+    
+    float3 baseColor = mix(blueColor, pinkColor, uniforms.colorFactor);
+    float3 finalColor = mix(baseColor, activeColor, uniforms.activationFactor);
     
     // Alpha based on lifetime
     float alpha = clamp(p.lifetime / p.initialLifetime, 0.0, 1.0);
-    p.color = float4(interpolatedColor, alpha * 0.8);
+    
+    // Size and Glow modulation
+    float finalSize = p.size * (1.0 + uniforms.activationFactor * 0.5);
+    p.color = float4(finalColor, alpha * (0.6 + uniforms.activationFactor * 0.4));
+    p.size = finalSize;
     
     particles[id] = p;
 }

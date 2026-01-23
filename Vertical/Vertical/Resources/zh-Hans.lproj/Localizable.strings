@@ -1,17 +1,31 @@
-"START TRACKING" = "开始追踪";
-"STOP TRACKING" = "停止追踪";
-"RESUME TRACKING" = "恢复追踪";
+"START_TRACKING" = "开始追踪";
+"STOP_TRACKING" = "停止追踪";
+"RESUME_TRACKING" = "恢复追踪";
 "AUTO_PAUSED" = "自动暂停已启动";
 "VAM" = "垂直升速";
 "ALTITUDE" = "当前高度";
 "STATUS" = "状态";
 "ACTIVE" = "活跃中";
 "PAUSED" = "已暂停";
-"NEXT GOAL" = "下一个目标";
+"NEXT_TARGET" = "下一个目标";
 "UNLOCKED" = "已解锁";
-"HAPTICS ON" = "触感反馈已开启";
-"HAPTICS OFF" = "触感反馈已关闭";
+"HAPTICS_ON" = "触感反馈已开启";
+"HAPTICS_OFF" = "触感反馈已关闭";
 "at %.0fm" = "高度 %.0f 米";
+
+// Metabolic / AMPK
+"AMPK_ACTIVATED" = "AMPK 已激活";
+"ACTIVATING_AMPK" = "AMPK 激活中...";
+"MITO_GEN" = "线粒体生成";
+"RER_EST" = "代谢率估算";
+"AUTOPHAGY" = "细胞自噬";
+"METABOLIC" = "代谢状态";
+"ACTIVATED" = "已激活";
+"NONE" = "无";
+"METABOLIC_REPORT" = "代谢报告";
+"MITO_GENERATION" = "线粒体指数";
+"FAT_RER" = "脂肪氧化率";
+"AUTO_DEPTH" = "自噬深度";
 
 // Onboarding
 "SAFETY & RISK DISCLAIMER" = "安全与风险免责声明";
@@ -25,20 +39,32 @@
 // Result
 "SUMMARY" = "运动总结";
 "SESSION SUMMARY" = "本次运动总结";
-"TOTAL CLIMB" = "总攀升";
-"MAX VAM" = "最高升速";
+"TOTAL_CLIMB" = "总攀升";
+"MAX_VAM" = "最高升速";
 "READINGS" = "采样点数";
 "DONE" = "完成";
 "SHARE" = "分享";
-"DRAG TO ROTATE DATA PATH" = "拖动旋转 3D 路径";
-"PRIVACY ON (HIDDEN START/END)" = "隐私已开启 (隐藏起点/终点)";
-"PRIVACY OFF (SHOW FULL PATH)" = "隐私已关闭 (显示完整路径)";
+"DRAG TO ROTATE 3D DATA PATH" = "拖动旋转 3D 路径";
+"PRIVACY_ON" = "隐私已开启";
+"PRIVACY_OFF" = "隐私已关闭";
+"START_END_HIDDEN" = "起点/终点已隐藏";
+"FULL_PATH_VISIBLE" = "显示完整路径";
 
 // Card
-"METERS CLIMBED" = "攀爬高度 (米)";
-"GOAL REACHED" = "达成目标";
+"METERS_CLIMBED" = "攀爬高度";
+"GOAL_REACHED" = "达成目标";
 "TYPE" = "类型";
 "Vertical Sprint" = "垂直冲刺";
+"METAVISION_BIOFEEDBACK" = "METAVISION 3D 生物反馈";
+"MITO" = "线粒体";
+"RER" = "呼吸率";
+"AUTO" = "自噬";
+"PAUSED" = "已暂停";
+"ACTIVE" = "进行中";
+"m" = "米";
+"pts" = "点";
+"min" = "分";
+"BPM" = "次/分";
 
 // Landmarks
 "Statue of Liberty" = "自由女神像";
@@ -61,3 +87,18 @@
 "%.0f%%" = "%.0f%%";
 "High Speed Detected" = "检测到高速移动";
 "Tracking paused. Tap Resume when you're ready to continue." = "追踪已暂停。准备好继续时请点击恢复按钮。";
+
+// Science Board
+"AMPK_SCIENCE_TITLE" = "科学观察站";
+"WHAT_IS_AMPK" = "什么是 AMPK?";
+"AMPK_DESCRIPTION" = "AMPK 是人体的“代谢总开关”。当能量消耗增加时，它会被激活并启动脂肪燃烧和细胞修复程序。";
+"WHY_CLIMB" = "为什么要垂直攀爬?";
+"CLIMB_BENEFITS" = "爬楼时的持续肌肉收缩比普通运动能更高效地激活 AMPK。这是写字楼里最高效的“微运动”。";
+"DECODING_VISUALS" = "解码 MetaVision 特效";
+"VISUALS_GUIDE" = "• 金色：脂肪氧化与血糖吸收。\n• 蓝色：线粒体再生（细胞动力源）。\n• 脉冲：细胞自噬（细胞大扫除）。";
+"SCIENCE_FOOTNOTE" = "基于 Dr. Huberman 及代谢生物学相关研究数据";
+
+// Retroactive Tracking
+"HIDDEN_CLIMB_DETECTED" = "检测到遗漏的攀爬数据";
+"FOUND_FLOORS_OFFLINE %lld" = "在 App 关闭期间，你爬了 %lld 层楼。";
+"SYNC" = "同步";

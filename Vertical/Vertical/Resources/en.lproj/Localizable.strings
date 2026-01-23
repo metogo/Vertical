@@ -1,17 +1,31 @@
-"START TRACKING" = "START TRACKING";
-"STOP TRACKING" = "STOP TRACKING";
-"RESUME TRACKING" = "RESUME TRACKING";
-"AUTO_PAUSED" = "Auto-paused. Stay safe.";
+"START_TRACKING" = "START TRACKING";
+"STOP_TRACKING" = "STOP TRACKING";
+"RESUME_TRACKING" = "RESUME TRACKING";
+"AUTO_PAUSED" = "AUTO-PAUSED";
 "VAM" = "VAM";
 "ALTITUDE" = "ALTITUDE";
 "STATUS" = "STATUS";
 "ACTIVE" = "ACTIVE";
 "PAUSED" = "PAUSED";
-"NEXT GOAL" = "NEXT GOAL";
+"NEXT_TARGET" = "NEXT TARGET";
 "UNLOCKED" = "UNLOCKED";
-"HAPTICS ON" = "HAPTICS ON";
-"HAPTICS OFF" = "HAPTICS OFF";
+"HAPTICS_ON" = "HAPTICS ON";
+"HAPTICS_OFF" = "HAPTICS OFF";
 "at %.0fm" = "at %.0fm";
+
+// Metabolic / AMPK
+"AMPK_ACTIVATED" = "AMPK ACTIVATED";
+"ACTIVATING_AMPK" = "ACTIVATING AMPK...";
+"MITO_GEN" = "MITO GEN";
+"RER_EST" = "RER EST";
+"AUTOPHAGY" = "AUTOPHAGY";
+"METABOLIC" = "METABOLIC";
+"ACTIVATED" = "ACTIVATED";
+"NONE" = "NONE";
+"METABOLIC_REPORT" = "METABOLIC REPORT";
+"MITO_GENERATION" = "MITOCHONDRIAL";
+"FAT_RER" = "FAT OXIDATION";
+"AUTO_DEPTH" = "AUTOPHAGY DEPTH";
 
 // Onboarding
 "SAFETY & RISK DISCLAIMER" = "SAFETY & RISK DISCLAIMER";
@@ -25,20 +39,32 @@
 // Result
 "SUMMARY" = "SUMMARY";
 "SESSION SUMMARY" = "SESSION SUMMARY";
-"TOTAL CLIMB" = "TOTAL CLIMB";
-"MAX VAM" = "MAX VAM";
+"TOTAL_CLIMB" = "TOTAL CLIMB";
+"MAX_VAM" = "MAX VAM";
 "READINGS" = "READINGS";
 "DONE" = "DONE";
 "SHARE" = "SHARE";
-"DRAG TO ROTATE DATA PATH" = "DRAG TO ROTATE DATA PATH";
-"PRIVACY ON (HIDDEN START/END)" = "PRIVACY ON (HIDDEN START/END)";
-"PRIVACY OFF (SHOW FULL PATH)" = "PRIVACY OFF (SHOW FULL PATH)";
+"DRAG TO ROTATE 3D DATA PATH" = "DRAG TO ROTATE 3D DATA PATH";
+"PRIVACY_ON" = "PRIVACY ON";
+"PRIVACY_OFF" = "PRIVACY OFF";
+"START_END_HIDDEN" = "START/END HIDDEN";
+"FULL_PATH_VISIBLE" = "FULL PATH VISIBLE";
 
 // Card
-"METERS CLIMBED" = "METERS CLIMBED";
-"GOAL REACHED" = "GOAL REACHED";
+"METERS_CLIMBED" = "METERS CLIMBED";
+"GOAL_REACHED" = "GOAL REACHED";
 "TYPE" = "TYPE";
 "Vertical Sprint" = "Vertical Sprint";
+"METAVISION_BIOFEEDBACK" = "METAVISION 3D BIO-FEEDBACK";
+"MITO" = "MITO";
+"RER" = "RER";
+"AUTO" = "AUTO";
+"PAUSED" = "PAUSED";
+"ACTIVE" = "ACTIVE";
+"m" = "m";
+"pts" = "pts";
+"min" = "min";
+"BPM" = "BPM";
 
 // Landmarks
 "Statue of Liberty" = "Statue of Liberty";
@@ -61,3 +87,18 @@
 "%.0f%%" = "%.0f%%";
 "High Speed Detected" = "High Speed Detected";
 "Tracking paused. Tap Resume when you're ready to continue." = "Tracking paused. Tap Resume when you're ready to continue.";
+
+// Science Board
+"AMPK_SCIENCE_TITLE" = "Science Observation";
+"WHAT_IS_AMPK" = "What is AMPK?";
+"AMPK_DESCRIPTION" = "AMPK is your body's 'Metabolic Master Switch'. It activates during energy deficit to stimulate fat burning and cellular repair.";
+"WHY_CLIMB" = "Why Vertical Climbing?";
+"CLIMB_BENEFITS" = "Continuous muscle contraction in stair climbing activates AMPK more efficiently than steady-state cardio. It's the ultimate 'Micro-Workout'.";
+"DECODING_VISUALS" = "Decoding MetaVision";
+"VISUALS_GUIDE" = "• Gold: Fat oxidation & Glucose uptake.\n• Blue: Mitochondrial biogenesis.\n• Pulses: Autophagy (Cellular Cleanup).";
+"SCIENCE_FOOTNOTE" = "BASED ON DATA FROM DR. HUBERMAN & METABOLIC RESEARCH";
+
+// Retroactive Tracking
+"HIDDEN_CLIMB_DETECTED" = "HIDDEN CLIMB DETECTED";
+"FOUND_FLOORS_OFFLINE %lld" = "Found %lld floors while app was closed.";
+"SYNC" = "SYNC";

@@ -52,6 +52,24 @@ final class ParticleRenderer: NSObject {
         }
     }
     
+    /// Current metabolic activation state
+    private var _isAMPKActivated: Bool = false
+    var isAMPKActivated: Bool {
+        get {
+            vamLock.lock()
+            defer { vamLock.unlock() }
+            return _isAMPKActivated
+        }
+        set {
+            vamLock.lock()
+            _isAMPKActivated = newValue
+            vamLock.unlock()
+        }
+    }
+    
+    /// Smoothed factor for visual transitions
+    private var currentActivationFactor: Float = 0.0
+    
     // MARK: - Initialization
     
     init?(device: MTLDevice) {
@@ -168,6 +186,11 @@ extension ParticleRenderer: MTKViewDelegate {
         uniforms.pointee.speedMultiplier = max(0.5, currentVam / ParticleConfiguration.speedScaleDivisor)
         uniforms.pointee.deltaTime = min(deltaTime, 0.1) // Cap delta time to prevent jumps
         uniforms.pointee.colorFactor = min(currentVam / ParticleConfiguration.peakVam, 1.0)
+        
+        // Smooth transition for metabolic activation effect
+        let targetFactor: Float = isAMPKActivated ? 1.0 : 0.0
+        currentActivationFactor += (targetFactor - currentActivationFactor) * 0.05
+        uniforms.pointee.activationFactor = currentActivationFactor
         
         let particleBuffer = particleBuffers[currentBufferIndex]
         
