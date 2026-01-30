@@ -12,6 +12,10 @@
 "HAPTICS_ON" = "触感反馈已开启";
 "HAPTICS_OFF" = "触感反馈已关闭";
 "at %.0fm" = "高度 %.0f 米";
+"TRACKER" = "追踪";
+"STATS" = "统计";
+"LANDMARKS" = "地标";
+"STATISTICS" = "数据统计";
 
 // Metabolic / AMPK
 "AMPK_ACTIVATED" = "AMPK 已激活";
@@ -28,13 +32,13 @@
 "AUTO_DEPTH" = "自噬深度";
 
 // Onboarding
-"SAFETY & RISK DISCLAIMER" = "安全与风险免责声明";
+"SAFETY_RISK_DISCLAIMER" = "安全与风险免责声明";
 "DISCLAIMER_TEXT" = "Vertical 专为城市环境下的爬楼梯追踪设计。爬楼梯是一项高强度的体力活动。";
 "WARNING_1" = "请在开始任何锻炼前确保您身体健康。";
 "WARNING_2" = "请留意周围环境。在楼梯上移动时，请勿专注于应用。";
 "WARNING_3" = "开发者不对因使用本应用而导致的任何伤害、事故或健康问题负责。";
 "WARNING_4" = "继续操作即表示您了解这些风险并同意负责任地使用本应用。";
-"I UNDERSTAND & AGREE" = "我理解并同意";
+"I_UNDERSTAND_AGREE" = "我理解并同意";
 
 // Result
 "SUMMARY" = "运动总结";
@@ -74,14 +78,41 @@
 "Burj Khalifa" = "哈利法塔";
 "Mount Everest Base Camp" = "珠穆朗玛峰大本营";
 
+// Time Ranges
+"D" = "日";
+"W" = "周";
+"M" = "月";
+"6M" = "半年";
+"Y" = "年";
+
+// Stats
+"METABOLIC_MINUTES" = "代谢分钟";
+"ALTITUDE_PROGRESS" = "攀升进度";
+"METABOLIC_INTENSITY" = "代谢强度";
+"7_DAY_PULSE" = "7日攀升频率";
+"MITO_SCORE" = "线粒体评分";
+"PEAK_INTENSITY" = "峰值强度";
+"METABOLIC_QUALITY" = "代谢质量";
+"BASE" = "基础";
+"FAT_OX" = "脂肪氧化";
+"GLUCOSE" = "糖原消耗";
+"RECOVERY" = "恢复";
+"FAT_BURN" = "燃脂";
+"PERFORMANCE" = "性能";
+"AMPK_ZONE" = "AMPK 燃脂区间";
+"m/avg" = "米/日均";
+"pts" = "分";
+
 // Sync
 "SYNCING" = "同步中...";
 "SYNCED" = "已同步";
 "FAILED" = "同步失败";
 "m/h" = "米/小时";
 "Epic Climb" = "史诗级攀爬";
-"URBAN EXPLORER" = "城市探险家";
+"URBAN_EXPLORER" = "城市探险家";
 "METERS" = "米";
+"METERS_PER_HOUR" = "米/小时";
+"STOPPED" = "已停止";
 "%.1f m" = "%.1f 米";
 "%.0f m" = "%.0f 米";
 "%.0f%%" = "%.0f%%";
@@ -97,6 +128,16 @@
 "DECODING_VISUALS" = "解码 MetaVision 特效";
 "VISUALS_GUIDE" = "• 金色：脂肪氧化与血糖吸收。\n• 蓝色：线粒体再生（细胞动力源）。\n• 脉冲：细胞自噬（细胞大扫除）。";
 "SCIENCE_FOOTNOTE" = "基于 Dr. Huberman 及代谢生物学相关研究数据";
+"COLLECTORS_NOTE" = "藏品笔记";
+"VERTICALLY_CONQUERED" = "垂直征服者";
+
+// Landmark Descriptions
+"A symbol of freedom in New York Harbor." = "纽约港自由的象征。";
+"The oldest of the Seven Wonders of the Ancient World." = "古代世界七大奇迹中最古老的一员。";
+"The iron lady of Paris." = "巴黎的铁娘子。";
+"Iconic Art Deco skyscraper." = "标志性的装饰艺术风格摩天大楼。";
+"The tallest structure in the world." = "世界上最高的人造结构。";
+"The gateway to the highest peak on Earth." = "通往地球最高峰的大门。";
 
 // Retroactive Tracking
 "HIDDEN_CLIMB_DETECTED" = "检测到遗漏的攀爬数据";

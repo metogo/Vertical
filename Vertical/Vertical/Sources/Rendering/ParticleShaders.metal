@@ -20,6 +20,10 @@ struct ParticleUniforms {
     float deltaTime;
     float colorFactor;
     float activationFactor;
+    float altitude;
+    float _padding1;
+    float _padding2;
+    float _padding3;
 };
 
 struct VertexOut {
@@ -55,10 +59,16 @@ kernel void updateParticles(
         p.velocity.y = 0.3 + fract(sin(float(seed + 3) * 93.456) * 43758.5453) * 0.3;
     }
     
-    // Update position based on velocity, speed multiplier and activation boost
+    // Update position based on velocity with delicate horizontal sway
     float activationBoost = 1.0 + uniforms.activationFactor * 1.5;
     float speed = max(0.5, uniforms.speedMultiplier) * activationBoost;
-    p.position += p.velocity * uniforms.deltaTime * speed;
+    
+    // Spatial wave logic: frequency and phase shift with altitude
+    float wavePhase = p.position.y * 2.5 + uniforms.altitude * 0.04 + float(id);
+    float delicateSway = sin(wavePhase) * 0.015 + sin(wavePhase * 2.13) * 0.006;
+    
+    p.position.x += (p.velocity.x + delicateSway) * uniforms.deltaTime * speed;
+    p.position.y += p.velocity.y * uniforms.deltaTime * speed;
     
     // Color logic: Blue -> Pink (VAM) -> Gold (AMPK Activation)
     float3 blueColor = float3(0.1, 0.4, 1.0);
@@ -68,12 +78,14 @@ kernel void updateParticles(
     float3 baseColor = mix(blueColor, pinkColor, uniforms.colorFactor);
     float3 finalColor = mix(baseColor, activeColor, uniforms.activationFactor);
     
-    // Alpha based on lifetime
-    float alpha = clamp(p.lifetime / p.initialLifetime, 0.0, 1.0);
+    // Alpha based on lifetime with a "shimmer" effect driven by altitude
+    float baseAlpha = clamp(p.lifetime / p.initialLifetime, 0.0, 1.0);
+    float shimmer = sin(p.position.y * 15.0 + uniforms.altitude * 0.15 + float(id)) * 0.15;
+    float finalAlpha = baseAlpha * (0.6 + uniforms.activationFactor * 0.4 + shimmer);
     
-    // Size and Glow modulation
+    // Size modulation
     float finalSize = p.size * (1.0 + uniforms.activationFactor * 0.5);
-    p.color = float4(finalColor, alpha * (0.6 + uniforms.activationFactor * 0.4));
+    p.color = float4(finalColor, finalAlpha);
     p.size = finalSize;
     
     particles[id] = p;

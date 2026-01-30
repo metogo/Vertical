@@ -11,6 +11,7 @@ struct TrackerFeature {
     struct State: Equatable {
         var vam: Double = 0.0
         var currentAltitude: Double = 0.0
+        var animatedAltitude: Double = 0.0 // For growth animations
         var isTracking: Bool = false
         var isPaused: Bool = false
         var altitudeHistory: [SensorReading] = []
@@ -28,6 +29,7 @@ struct TrackerFeature {
         var reachedLandmarkIds: Set<UUID> = []
         var landmarks: [Landmark] = []
         var lastUnlockedLandmarkName: String? = nil
+        var celebrationLandmark: Landmark? = nil // For the new full-screen effect
         
         // Metabolic Activity (AMPK & MetaVision)
         var activeClimbDuration: TimeInterval = 0.0
@@ -100,6 +102,11 @@ struct TrackerFeature {
             case setLandmarks([Landmark])
             case checkRetroactiveTracking
             case retroactiveFloorsFound(Int)
+            case startGrowthAnimation(target: Double)
+            case growthAnimationTick(target: Double)
+            case loadUnlockedLandmarks
+            case setUnlockedLandmarkIds(Set<UUID>)
+            case clearCelebration
         }
     }
     
@@ -116,7 +123,26 @@ struct TrackerFeature {
         Reduce { state, action in
             switch action {
             case .view(.onAppear):
-                return .send(.internal(.checkRetroactiveTracking))
+                return .merge(
+                    .send(.internal(.checkRetroactiveTracking)),
+                    .send(.internal(.loadUnlockedLandmarks)),
+                    .run { [healthClient] send in
+                        for await _ in await healthClient.observeHealthDataChanges() {
+                            await send(.internal(.checkRetroactiveTracking))
+                        }
+                    }
+                )
+                
+            case .internal(.loadUnlockedLandmarks):
+                return .run { [databaseClient] send in
+                    if let ids = try? await databaseClient.fetchUnlockedLandmarkIds() {
+                        await send(.internal(.setUnlockedLandmarkIds(ids)))
+                    }
+                }
+                
+            case let .internal(.setUnlockedLandmarkIds(ids)):
+                state.reachedLandmarkIds = ids
+                return .none
                 
             case let .internal(.setLandmarks(landmarks)):
                 state.landmarks = landmarks
@@ -124,6 +150,11 @@ struct TrackerFeature {
                 
             case .view(.clearUnlockMessage):
                 state.lastUnlockedLandmarkName = nil
+                state.celebrationLandmark = nil
+                return .none
+                
+            case .internal(.clearCelebration):
+                state.celebrationLandmark = nil
                 return .none
                 
             case .view(.hapticToggleTapped):
@@ -141,27 +172,63 @@ struct TrackerFeature {
                 if floors > 0 {
                     // Save a "Shadow Session" representing the offline climbing
                     let id = "OFFLINE-\(UUID().uuidString.prefix(8))"
-                    let endTs = Date().timeIntervalSince1970
-                    let startTs = endTs - (3600 * 2) // Assume it happened in the last 2 hours for now
+                    let end = Date()
+                    let start = end.addingTimeInterval(-3600 * 2) // Assume it happened in the last 2 hours for now
                     let climb = Double(floors) * 3.0 // 3m per floor
                     
-                    return .run { [databaseClient] _ in
-                        try? await databaseClient.saveSession(
-                            id,
-                            startTs,
-                            endTs,
-                            climb,
-                            0.0, // VAM unknown
-                            0,   // Readings count unknown
-                            false,
-                            false, // AMPK unknown
-                            0.0,
-                            0.85,
-                            0.0
-                        )
+                    return .run { [databaseClient] send in
+                        // 1. Epic 9.3: Check for data overlap (Deduplication)
+                        let isOverlapping = (try? await databaseClient.checkOverlap(start, end)) ?? false
+                        
+                        if isOverlapping {
+                            print("🛡️ Deduplication: Overlap detected for retroactive sync. Skipping shadow session.")
+                            // Still show the growth animation for "achievement feel" but don't duplicate data
+                            // In a real app, we might want to merge or inform the user, but for MVP we prefer high-freq data.
+                        } else {
+                            // 2. Save to DB if no overlap
+                            try? await databaseClient.saveSession(
+                                id,
+                                start.timeIntervalSince1970,
+                                end.timeIntervalSince1970,
+                                climb,
+                                0.0, // VAM unknown
+                                0,   // Readings count unknown
+                                false,
+                                false, // AMPK unknown
+                                0.0,
+                                0.85,
+                                0.0
+                            )
+                        }
+                        
+                        // 3. Trigger visual growth (Delayed Reward Feel)
+                        await send(.internal(.startGrowthAnimation(target: climb)))
                     }
                 }
                 return .none
+                
+            case let .internal(.startGrowthAnimation(target)):
+                state.animatedAltitude = 0 // Start from zero for the "delayed reward" effect
+                return .run { send in
+                    await send(.internal(.growthAnimationTick(target: target)))
+                }
+                
+            case let .internal(.growthAnimationTick(target)):
+                let step = target / 20.0 
+                state.animatedAltitude += step
+                
+                let haptic = hapticClient
+                if state.animatedAltitude < target {
+                    return .run { [animated = state.animatedAltitude] send in
+                        await haptic.impact(.light) // Haptic "ticks" (FR-VS-07)
+                        try? await Task.sleep(nanoseconds: 70_000_000) // Slightly faster (1.4s total)
+                        await send(.internal(.growthAnimationTick(target: target)))
+                    }
+                } else {
+                    state.animatedAltitude = target
+                    state.currentAltitude = target
+                    return .run { _ in await haptic.notification(.success) }
+                }
                 
             case .view(.startButtonTapped):
                 state.isTracking = true
@@ -253,6 +320,7 @@ struct TrackerFeature {
                 
                 state.sessionReadingsCount += 1
                 state.currentAltitude = reading.relativeAltitude
+                state.animatedAltitude = reading.relativeAltitude // Sync animated display during live tracking
                 state.altitudeHistory.append(reading)
                 
                 // Track haptics
@@ -282,18 +350,26 @@ struct TrackerFeature {
                     }
                     
                     // Then update state and create effects (separated to avoid inout capture)
+                    let database = databaseClient
                     for landmark in newlyReachedLandmarks {
                         state.reachedLandmarkIds.insert(landmark.id)
                         state.lastUnlockedLandmarkName = landmark.name
+                        state.celebrationLandmark = landmark // Trigger full-screen effect
                         logger.info("Landmark reached: \(landmark.name)")
+                        
+                        // Save to persistent storage
+                        hapticEffects.append(.run { _ in
+                            try? await database.unlockLandmark(landmark.id)
+                        })
                     }
                     
                     if !newlyReachedLandmarks.isEmpty {
                         let client = hapticClient
                         hapticEffects.append(.run { _ in await client.notification(.success) })
-                        // Auto-dismiss the message after 3 seconds
+                        // Auto-dismiss the message and celebration after 4 seconds
                         hapticEffects.append(.run { send in
-                            try? await Task.sleep(nanoseconds: State.unlockMessageDuration)
+                            try? await Task.sleep(nanoseconds: 4_000_000_000)
+                            await send(.internal(.clearCelebration))
                             await send(.view(.clearUnlockMessage))
                         })
                     }
@@ -387,14 +463,18 @@ struct TrackerFeature {
                 return .merge(hapticEffects + [saveEffect])
                 
             case .internal(.checkRetroactiveTracking):
-                return .run { [sensorClient] send in
-                    // Query last 24 hours for "hidden" climbs
+                return .run { [sensorClient, healthClient] send in
+                    // Query last 7 days for "hidden" climbs (PRD Alignment)
                     let end = Date()
-                    let start = end.addingTimeInterval(-24 * 3600)
+                    let start = end.addingTimeInterval(-7 * 24 * 3600)
                     do {
-                        let floors = try await sensorClient.queryHistoricalFloors(start, end)
-                        if floors > 3 {
-                            await send(.internal(.retroactiveFloorsFound(floors)))
+                        // Combine Pedometer and HealthKit for better accuracy
+                        let pFloors = try await sensorClient.queryHistoricalFloors(start, end)
+                        let hFloors = try await healthClient.fetchFloorsClimbed(start, end)
+                        let maxFloors = max(pFloors, hFloors)
+                        
+                        if maxFloors > 3 {
+                            await send(.internal(.retroactiveFloorsFound(maxFloors)))
                         }
                     } catch {
                         print("❌ Retroactive query failed: \(error.localizedDescription)")

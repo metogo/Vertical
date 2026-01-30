@@ -71,7 +71,7 @@ struct OnboardingView: View {
                             )
                         )
                     
-                    Text("URBAN EXPLORER")
+                    Text(LocalizedStringKey("URBAN_EXPLORER"))
                         .font(.caption)
                         .fontWeight(.black)
                         .kerning(4)
@@ -81,7 +81,7 @@ struct OnboardingView: View {
                 // Disclaimer Box
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("SAFETY & RISK DISCLAIMER")
+                        Text(LocalizedStringKey("SAFETY_RISK_DISCLAIMER"))
                             .font(.headline)
                             .foregroundStyle(.pink)
                         
@@ -109,7 +109,7 @@ struct OnboardingView: View {
                 Button {
                     store.send(.view(.agreeButtonTapped))
                 } label: {
-                    Text("I UNDERSTAND & AGREE")
+                    Text(LocalizedStringKey("I_UNDERSTAND_AGREE"))
                         .font(.headline)
                         .fontWeight(.black)
                         .foregroundStyle(.white)

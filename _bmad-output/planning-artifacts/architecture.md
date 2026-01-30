@@ -130,6 +130,13 @@ xcodebuild -create-project Vertical -type application -lifecycle swiftui -organi
 - **Location Strategy**: **Reduced Accuracy + Local Only**.
   - _Decision_: 申请 "Always" 位置权限仅为了保活后台任务，但实际逻辑中**丢弃经纬度**，只保留海拔 (`altitude`) 数据，以此打消用户隐私顾虑。
 
+### Passive Data Sync & Conflict Resolution
+
+- **Sync Engine**: **HealthKit Background Delivery**.
+  - _Decision_: 开启 `enableBackgroundDelivery(for:objectType:frequency:)` 并配合 `HKObserverQuery`。当系统级健康数据更新时，唤醒 App 进行增量采集，确保代谢积分为最新。
+- **Deduplication Strategy**: **Time-Windowed Sliding Buffer**.
+  - _Decision_: 在写入 `SensorReadings` 前，建立一个基于 `startDate` 和 `endDate` 的滑动窗口。若补录数据的时间戳与本地实时记录重叠，优先保留本地高频（60Hz）数据点，并在交叉点进行海拔包络线平滑处理。
+
 ## Implementation Patterns & Consistency Rules
 
 ### TCA Naming Patterns
@@ -159,6 +166,7 @@ xcodebuild -create-project Vertical -type application -lifecycle swiftui -organi
 
 - ❌ 直接在 View 中实例化 `CMMotionManager`。必须通过 `Dependency(\.motionClient)` 注入。
 - ❌ 在主线程进行大量数学运算。必须放入 Metal 或后台 Actor。
+- ❌ **直接覆盖数据库**：严禁直接用 HealthKit 的低频数据覆盖本地的高频传感器记录。必须使用上述 Deduplication 策略。
 
 ## Project Structure & Boundaries
 

@@ -229,10 +229,9 @@ struct ResultView: View {
                     .padding(.horizontal, 24)
                     .padding(.top, 24)
                     
-                    // 3D Visualization Container
+                    // Achievement Infographic Container
                     ZStack {
-                        SpiralContainerView(readings: store.visibleReadings)
-                            .id(store.isPrivacyModeEnabled)
+                        AchievementInfographicView(totalClimb: store.totalClimb, landmarks: Landmark.samples)
                             .clipShape(RoundedRectangle(cornerRadius: 32))
                             .background(
                                 RoundedRectangle(cornerRadius: 32)
@@ -250,15 +249,6 @@ struct ResultView: View {
                                     )
                             )
                             .shadow(color: .cyan.opacity(0.15), radius: 20, x: 0, y: 10)
-                        
-                        VStack {
-                            Spacer()
-                            Text(LocalizedStringKey("DRAG TO ROTATE 3D DATA PATH"))
-                                .font(.system(size: 9, weight: .black, design: .monospaced))
-                                .foregroundStyle(.white.opacity(0.4))
-                                .padding(.bottom, 24)
-                                .kerning(1)
-                        }
                     }
                     .padding(.horizontal, 24)
                     .frame(maxHeight: .infinity)
@@ -326,7 +316,7 @@ struct ResultView: View {
                                 .kerning(2)
                             Spacer()
                             if store.isAMPKActivated {
-                                Label("AMPK_ACTIVATED", systemImage: "flame.fill")
+                                Label(String(localized: "AMPK_ACTIVATED"), systemImage: "flame.fill")
                                     .font(.system(size: 10, weight: .black))
                                     .foregroundStyle(.orange)
                             }
@@ -375,12 +365,12 @@ struct ResultView: View {
                     } label: {
                         HStack(spacing: 12) {
                             Image(systemName: store.isPrivacyModeEnabled ? "eye.slash.fill" : "eye.fill")
-                            Text(store.isPrivacyModeEnabled ? "PRIVACY_ON" : "PRIVACY_OFF")
+                            Text(LocalizedStringKey(store.isPrivacyModeEnabled ? "PRIVACY_ON" : "PRIVACY_OFF"))
                             
                             Text("•")
                                 .opacity(0.5)
                             
-                            Text(store.isPrivacyModeEnabled ? "START_END_HIDDEN" : "FULL_PATH_VISIBLE")
+                            Text(LocalizedStringKey(store.isPrivacyModeEnabled ? "START_END_HIDDEN" : "FULL_PATH_VISIBLE"))
                                 .font(.system(size: 9, weight: .bold))
                                 .opacity(0.7)
                         }

@@ -48,5 +48,11 @@ struct ParticleUniforms {
     var colorFactor: Float          // 4 bytes
     /// Metabolic activation factor (0.0 to 1.0)
     var activationFactor: Float     // 4 bytes
-    // Total: 16 bytes (aligned)
+    /// Current altitude for spatial fluctuations
+    var altitude: Float             // 4 bytes
+    /// Padding for 16-byte alignment
+    var _padding1: Float = 0        // 4 bytes
+    var _padding2: Float = 0        // 4 bytes
+    var _padding3: Float = 0        // 4 bytes
+    // Total: 32 bytes
 }

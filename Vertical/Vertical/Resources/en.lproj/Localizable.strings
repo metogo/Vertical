@@ -12,6 +12,10 @@
 "HAPTICS_ON" = "HAPTICS ON";
 "HAPTICS_OFF" = "HAPTICS OFF";
 "at %.0fm" = "at %.0fm";
+"TRACKER" = "TRACKER";
+"STATS" = "STATS";
+"LANDMARKS" = "LANDMARKS";
+"STATISTICS" = "STATISTICS";
 
 // Metabolic / AMPK
 "AMPK_ACTIVATED" = "AMPK ACTIVATED";
@@ -28,13 +32,13 @@
 "AUTO_DEPTH" = "AUTOPHAGY DEPTH";
 
 // Onboarding
-"SAFETY & RISK DISCLAIMER" = "SAFETY & RISK DISCLAIMER";
+"SAFETY_RISK_DISCLAIMER" = "SAFETY & RISK DISCLAIMER";
 "DISCLAIMER_TEXT" = "Vertical is designed for tracking stair climbing in urban environments. Stair climbing is a high-intensity physical activity.";
 "WARNING_1" = "Ensure you are in good physical health before starting any workout.";
 "WARNING_2" = "Be aware of your surroundings. Do not focus on the app while moving on stairs.";
 "WARNING_3" = "The developers are not responsible for any injuries, accidents, or health issues resulting from the use of this app.";
 "WARNING_4" = "By proceeding, you acknowledge these risks and agree to use the app responsibly.";
-"I UNDERSTAND & AGREE" = "I UNDERSTAND & AGREE";
+"I_UNDERSTAND_AGREE" = "I UNDERSTAND & AGREE";
 
 // Result
 "SUMMARY" = "SUMMARY";
@@ -74,14 +78,41 @@
 "Burj Khalifa" = "Burj Khalifa";
 "Mount Everest Base Camp" = "Mount Everest Base Camp";
 
+// Time Ranges
+"D" = "D";
+"W" = "W";
+"M" = "M";
+"6M" = "6M";
+"Y" = "Y";
+
+// Stats
+"METABOLIC_MINUTES" = "METABOLIC MINUTES";
+"ALTITUDE_PROGRESS" = "ALTITUDE PROGRESS";
+"METABOLIC_INTENSITY" = "METABOLIC INTENSITY";
+"7_DAY_PULSE" = "7-DAY PULSE";
+"MITO_SCORE" = "MITO SCORE";
+"PEAK_INTENSITY" = "PEAK INTENSITY";
+"METABOLIC_QUALITY" = "METABOLIC QUALITY";
+"BASE" = "BASE";
+"FAT_OX" = "FAT OX";
+"GLUCOSE" = "GLUCOSE";
+"RECOVERY" = "RECOVERY";
+"FAT_BURN" = "FAT BURN";
+"PERFORMANCE" = "PERFORMANCE";
+"AMPK_ZONE" = "AMPK ZONE";
+"m/avg" = "m/avg";
+"pts" = "pts";
+
 // Sync
 "SYNCING" = "SYNCING...";
 "SYNCED" = "SYNCED";
 "FAILED" = "FAILED";
 "m/h" = "m/h";
 "Epic Climb" = "Epic Climb";
-"URBAN EXPLORER" = "URBAN EXPLORER";
+"URBAN_EXPLORER" = "URBAN EXPLORER";
 "METERS" = "METERS";
+"METERS_PER_HOUR" = "m/h";
+"STOPPED" = "STOPPED";
 "%.1f m" = "%.1f m";
 "%.0f m" = "%.0f m";
 "%.0f%%" = "%.0f%%";
@@ -97,6 +128,16 @@
 "DECODING_VISUALS" = "Decoding MetaVision";
 "VISUALS_GUIDE" = "• Gold: Fat oxidation & Glucose uptake.\n• Blue: Mitochondrial biogenesis.\n• Pulses: Autophagy (Cellular Cleanup).";
 "SCIENCE_FOOTNOTE" = "BASED ON DATA FROM DR. HUBERMAN & METABOLIC RESEARCH";
+"COLLECTORS_NOTE" = "COLLECTOR'S NOTE";
+"VERTICALLY_CONQUERED" = "VERTICALLY CONQUERED";
+
+// Landmark Descriptions
+"A symbol of freedom in New York Harbor." = "A symbol of freedom in New York Harbor.";
+"The oldest of the Seven Wonders of the Ancient World." = "The oldest of the Seven Wonders of the Ancient World.";
+"The iron lady of Paris." = "The iron lady of Paris.";
+"Iconic Art Deco skyscraper." = "Iconic Art Deco skyscraper.";
+"The tallest structure in the world." = "The tallest structure in the world.";
+"The gateway to the highest peak on Earth." = "The gateway to the highest peak on Earth.";
 
 // Retroactive Tracking
 "HIDDEN_CLIMB_DETECTED" = "HIDDEN CLIMB DETECTED";

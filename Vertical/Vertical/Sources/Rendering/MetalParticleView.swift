@@ -8,6 +8,8 @@ private let logger = Logger(subsystem: "com.vertical.rendering", category: "Meta
 struct MetalParticleView: UIViewRepresentable {
     /// Current VAM value to control particle speed and color
     let vam: Double
+    /// Current altitude for spatial fluctuations
+    let altitude: Double
     /// Whether AMPK metabolic activation is active
     let isAMPKActivated: Bool
     
@@ -42,6 +44,7 @@ struct MetalParticleView: UIViewRepresentable {
     
     func updateUIView(_ uiView: MTKView, context: Context) {
         context.coordinator.renderer?.vam = Float(vam)
+        context.coordinator.renderer?.altitude = Float(altitude)
         context.coordinator.renderer?.isAMPKActivated = isAMPKActivated
     }
     
@@ -57,7 +60,7 @@ struct MetalParticleView: UIViewRepresentable {
 #Preview {
     ZStack {
         Color.black
-        MetalParticleView(vam: 600, isAMPKActivated: true)
+        MetalParticleView(vam: 600, altitude: 100, isAMPKActivated: true)
     }
     .ignoresSafeArea()
 }

@@ -411,3 +411,59 @@ graph TD
 - **VoiceOver/TalkBack**: 为自定义的 `Canvas` 组件提供完整的 Accessibility Tree 映射。让视障用户也能“听”懂垂直轴。
 - **Haptic Substitution**: 对于听障用户，所有的关键语音提示（如 "Halfway There"）必须同步伴随特定的震动模式。
 - **High Contrast**: 默认保持超高对比度 (Neon on Black)，满足 WCAG AAA 标准。
+
+## Statistics Page UI Breakdown (Retrospective View)
+
+**Goal**: Transform raw time-series data into a "Metabolic Legacy" dashboard that feels premium, scientific, and motivating.
+
+### 1. View Architecture
+
+采用 **"The Periodic Table" (周期表)** 布局逻辑，顶部为时间轴切换，中部为核心摘要，底部为深度图表。
+
+- **Header Layer**: `SegmentedControl` (D, W, M, 6M, Y) + 周期总高度汇总。
+- **Insight Layer**: 核心指标卡片流 (Horizontal Scroll or Grid)。
+- **Visual Layer**: 核心图表区 (Altitude Chart & Zone distribution)。
+- **Bottom Layer**: 智能建议与 AMPK 科学内容入口。
+
+### 2. Detailed Component Specs
+
+#### Component A: The Timeframe Switcher (`StatsSegmentedControl`)
+
+- **Visual**: Cyberpunk 风格的细边框切换器，选中项带有 Neon Glow。
+- **Interaction**: 点击触发 Haptic `selectionChanged`，图表通过异步数据流刷新。
+
+#### Component B: Insight Summary Cards (`MetricCard`)
+
+仿苹果健康 "Summary" 的精简版，但视觉更硬核。
+
+- **Card 1: "7-Day Pulse"**: 展示过去 7 天平均爬升高度，通过对比色显示增减百分比。
+- **Card 2: "Peak Intensity"**: 展示本周期内最高 $HRR\%$ 达到的区间。
+- **Card 3: "Mito Score"**: 累计的线粒体指数（75%-90% $HRR\%$ 分钟数）。
+
+#### Component C: Main Altitude Chart (`AltitudeBarChart`)
+
+- **Type**: `SwiftCharts` Bar Mark.
+- **Visual**: 渐变色柱状图（从底部的 Cyan 到顶部的 Lime）。
+- **Scrubbing**: 用户指尖滑动时，实时更新顶部的日期和具体数值数值，并触发轻微的 Haptic `step`。
+
+#### Component D: Metabolic Quality Map (`ZoneDistributionChart`)
+
+- **Type**: Stacked Horizontal Bar or Donut Chart.
+- **Visual**: 四种颜色代表不同代谢区间：
+  - **Blue**: Recovery / Base.
+  - **Cyan**: Fat Oxidation.
+  - **Pink**: Glucose Uptake.
+  - **Gold**: AMPK / Autophagy Zone.
+- **Legend**: 指引用户点击进入 "AMPK Science Board" 深入了解指标含义。
+
+### 3. Design Principles for Statistics
+
+1. **Consistency of Colors**: 图表中的颜色必须与运动实时的 HUD 颜色完全一致。
+2. **"Empty State" Motivation**: 当数据不足时，展示地标剪影作为占位符，提示“还差 X 米解锁碎片”。
+3. **Cinematic Transitions**: 切换时间维度时，柱状图应带有平滑的伸缩动画（Spring Animation），而不是瞬间跳变。
+
+### 4. Technical Integration (TCA)
+
+- **State**: `StatsFeature.State` 维护当前选择的时间跨度及同步后的数据模型。
+- **Action**: `statsEffect` 负责从 `DatabaseClient` 异步查询、去重并转换成 `ChartModel`。
+- **View**: 使用 `SwiftCharts` 实现 60fps 的交互性能。

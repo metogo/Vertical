@@ -20,6 +20,16 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Vertical needs location access to track your climb stats in the background.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Vertical needs location access to track your climb stats.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Vertical needs motion access to count steps and measure floors climbed.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Vertical needs to access your health data to estimate metabolic metrics like heart rate and efficiency.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Vertical needs health access to analyze your metabolic performance during climbs.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -27,6 +37,10 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -38,20 +52,5 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Vertical needs location access to track your climb stats in the background.</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Vertical needs location access to track your climb stats.</string>
-    <key>NSMotionUsageDescription</key>
-    <string>Vertical needs motion access to count steps and measure floors climbed.</string>
-    <key>UIBackgroundModes</key>
-    <array>
-        <string>location</string>
-        <string>processing</string>
-    </array>
-    <key>BGTaskSchedulerPermittedIdentifiers</key>
-    <array>
-        <string>com.fanhua.vertical.processing</string>
-    </array>
 </dict>
 </plist>

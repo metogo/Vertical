@@ -9,6 +9,8 @@ struct SpiralVertex {
 
 /// Uniforms for the 3D spiral rendering
 struct SpiralUniforms {
-    var modelViewProjectionMatrix: matrix_float4x4
+    var mvpMatrix: matrix_float4x4
     var rotationMatrix: matrix_float4x4
+    var landmarkHeight: Float
+    var currentClimb: Float
 }

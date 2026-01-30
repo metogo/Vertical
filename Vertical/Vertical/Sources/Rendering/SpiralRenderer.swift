@@ -13,6 +13,12 @@ final class SpiralRenderer: NSObject {
     private var vertexBuffer: MTLBuffer?
     private var vertexCount: Int = 0
     
+    private var landmarkBuffer: MTLBuffer?
+    private var landmarkVertexCount: Int = 0
+    
+    private var totalClimbHeight: Float = 0.0
+    private var landmarkHeight: Float = 0.0
+    
     var rotation: SIMD2<Float> = .zero // X and Y rotation
     
     init?(device: MTLDevice) {
@@ -69,7 +75,7 @@ final class SpiralRenderer: NSObject {
     }
     
     func updateData(readings: [SensorReading]) {
-        guard readings.count >= 4 else {
+        guard !readings.isEmpty else {
             self.vertexBuffer = nil
             self.vertexCount = 0
             return
@@ -78,85 +84,80 @@ final class SpiralRenderer: NSObject {
         let minAlt = readings.map { $0.relativeAltitude }.min() ?? 0
         let maxAlt = readings.map { $0.relativeAltitude }.max() ?? 10
         let altRange = max(1.0, maxAlt - minAlt)
-        let count = readings.count
+        self.totalClimbHeight = Float(altRange)
         
-        // Convert readings to control points
-        var controlPoints: [SIMD3<Float>] = []
+        // --- 1. SET THE STAGE (Landmark scale) ---
+        let landmarkSamples = Landmark.samples
+        let targetLandmark = landmarkSamples.first(where: { Float($0.height) > Float(altRange) }) ?? landmarkSamples[0]
+        self.landmarkHeight = Float(targetLandmark.height)
         
-        // Calculate dynamic turns: 1 turn per 20m, min 2, max 100
-        let turns = min(100.0, max(2.0, Float(altRange) / 20.0))
+        let boxHeight: Float = 3.2
+        let scaleFactor = boxHeight / self.landmarkHeight
         
-        for (i, reading) in readings.enumerated() {
-            let t = Float(i) / Float(count - 1)
-            let angle = t * .pi * 2.0 * turns
+        // --- 2. GENERATE USER CLIMB (The Hero) ---
+        var vertices: [SpiralVertex] = []
+        let stepHeight: Float = 0.18
+        let totalSteps = Int(Float(altRange) / stepHeight)
+        
+        for i in 0..<totalSteps {
+            let t = Float(i) / Float(max(1, totalSteps - 1))
+            let angle = t * .pi * 2.0 * 8.0 // Consistently elegant 8 turns
             
-            // Dynamic radius based on height (cone shape) + slight wobble
-            // We reduce radius slightly for very long climbs to keep it elegant
-            let radiusScale: Float = altRange > 500 ? 0.7 : 1.0
-            let baseRadius: Float = 0.5 * radiusScale
-            let radius = baseRadius + sin(t * .pi * 4) * (0.1 * radiusScale)
-            
+            let radius: Float = 0.6
             let x = radius * cos(angle)
             let z = radius * sin(angle)
+            let y = (Float(i) * stepHeight * scaleFactor) - (boxHeight / 2.0)
             
-            // Adjust vertical scale based on climb height
-            // Small climbs (<100m) look "shorter", massive climbs fill the volume
-            let heightLimit: Float = 2.5
-            let heightScale = min(1.0, Float(altRange) / 100.0)
-            let currentHeight = heightLimit * (0.5 + 0.5 * heightScale) // Minimum 50% height
+            // Dynamic coloration: Blue (0) -> Cyan (Target) -> Pink/Orange (Peak)
+            let color = mix(SIMD3<Float>(0, 0.8, 1), SIMD3<Float>(1, 0.4, 0.8), t: t)
             
-            let y = (Float(reading.relativeAltitude - minAlt) / Float(altRange)) * currentHeight - (currentHeight / 2.0)
-            
-            controlPoints.append(SIMD3<Float>(x, y, z))
+            vertices.append(SpiralVertex(
+                position: SIMD4<Float>(x, y, z, 1.0),
+                color: SIMD4<Float>(color.x, color.y, color.z, 1.0)
+            ))
         }
         
-        // Generate interpolated vertices
-        var vertices: [SpiralVertex] = []
-        let segments = controlPoints.count - 3
+        // --- 3. GENERATE THE "MONOLITH" (Fixed Landmark Structure) ---
+        var landmarkVertices: [SpiralVertex] = []
         
-        // Ensure smoothness: at least 32 steps per turn, or 20 per segment min
-        let stepsPerSegment = max(20, Int((turns * 32) / Float(segments)))
+        // We build a vertical crystalline "Guide Column"
+        let columns = 4
+        let columnHeightPoints = 200
+        for c in 0..<columns {
+            let angle = Float(c) / Float(columns) * .pi * 2.0
+            let r: Float = 0.7 // Slightly outside the user path
+            for h in 0..<columnHeightPoints {
+                let ht = Float(h) / Float(columnHeightPoints)
+                let y = (ht * boxHeight) - (boxHeight / 2.0)
+                
+                // Add "ticks" every 10 meters roughly
+                let isTick = h % 20 == 0
+                let color = isTick ? SIMD4<Float>(1,1,1, 0.15) : SIMD4<Float>(1,1,1, 0.05)
+                
+                landmarkVertices.append(SpiralVertex(
+                    position: SIMD4<Float>(r * cos(angle), y, r * sin(angle), 1.0),
+                    color: color
+                ))
+            }
+        }
         
-        for i in 0..<segments {
-            let p0 = controlPoints[i]
-            let p1 = controlPoints[i + 1]
-            let p2 = controlPoints[i + 2]
-            let p3 = controlPoints[i + 3]
-            
-            for j in 0..<stepsPerSegment {
-                let t = Float(j) / Float(stepsPerSegment)
-                let pos = catmullRom(p0: p0, p1: p1, p2: p2, p3: p3, t: t)
-                
-                // Enhanced coloring logic
-                // Calculate height ratio relative to full range
-                let heightRatio = (pos.y + 1.25) / 2.5
-                
-                // Gradient: Deep Purple -> Neon Blue -> Hot Pink
-                let deepPurple = SIMD3<Float>(0.3, 0.0, 0.6)
-                let neonBlue = SIMD3<Float>(0.0, 0.8, 1.0)
-                let hotPink = SIMD3<Float>(1.0, 0.2, 0.7)
-                
-                var color: SIMD3<Float>
-                if heightRatio < 0.5 {
-                    color = mix(deepPurple, neonBlue, t: heightRatio * 2.0)
-                } else {
-                    color = mix(neonBlue, hotPink, t: (heightRatio - 0.5) * 2.0)
-                }
-                
-                // Add alpha that fades at edges
-                vertices.append(SpiralVertex(
-                    position: SIMD4<Float>(pos.x, pos.y, pos.z, 1.0),
-                    color: SIMD4<Float>(color.x, color.y, color.z, 1.0)
+        // Ground Grid (Small & subtle)
+        for r in 0...2 {
+            let ringRadius = Float(r) * 0.4
+            for i in 0..<40 {
+                let angle = Float(i) / 40.0 * .pi * 2.0
+                landmarkVertices.append(SpiralVertex(
+                    position: SIMD4<Float>(ringRadius * cos(angle), -boxHeight/2.0, ringRadius * sin(angle), 1.0),
+                    color: SIMD4<Float>(1, 1, 1, 0.1)
                 ))
             }
         }
         
         self.vertexCount = vertices.count
-        self.vertexBuffer = device.makeBuffer(
-            bytes: vertices,
-            length: vertices.count * MemoryLayout<SpiralVertex>.stride,
-            options: .storageModeShared
-        )
+        self.vertexBuffer = device.makeBuffer(bytes: vertices, length: vertices.count * MemoryLayout<SpiralVertex>.stride, options: .storageModeShared)
+        
+        self.landmarkVertexCount = landmarkVertices.count
+        self.landmarkBuffer = device.makeBuffer(bytes: landmarkVertices, length: landmarkVertices.count * MemoryLayout<SpiralVertex>.stride, options: .storageModeShared)
     }
 }
 
@@ -190,27 +191,29 @@ extension SpiralRenderer: MTKViewDelegate {
         let rotationMatrix = matrix_float4x4.rotationY(rotation.x) * matrix_float4x4.rotationX(0.2) // Slight tilt
         
         var uniforms = SpiralUniforms(
-            modelViewProjectionMatrix: projectionMatrix * viewMatrix,
-            rotationMatrix: rotationMatrix
+            mvpMatrix: projectionMatrix * viewMatrix,
+            rotationMatrix: rotationMatrix,
+            landmarkHeight: self.landmarkHeight,
+            currentClimb: self.totalClimbHeight
         )
         
         descriptor.colorAttachments[0].loadAction = .clear
-        descriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0) // Transparent background
+        descriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
         
         if let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) {
             encoder.setRenderPipelineState(pipelineState)
+            
+            // Pass 1: Landmark Ghost (Background)
+            if let landmarkBuffer = landmarkBuffer {
+                encoder.setVertexBuffer(landmarkBuffer, offset: 0, index: 0)
+                encoder.setVertexBytes(&uniforms, length: MemoryLayout<SpiralUniforms>.stride, index: 1)
+                encoder.drawPrimitives(type: .point, vertexStart: 0, vertexCount: landmarkVertexCount)
+            }
+            
+            // Pass 2: Main Staircase Points
             encoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
-            
-            // Pass 1: Main Line
-            var uniformsMain = uniforms
-            encoder.setVertexBytes(&uniformsMain, length: MemoryLayout<SpiralUniforms>.stride, index: 1)
-            encoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: vertexCount)
-            
-            // Pass 2: Glow bleed (slight offset/scale)
-            var uniformsGlow = uniforms
-            uniformsGlow.modelViewProjectionMatrix = uniforms.modelViewProjectionMatrix * matrix_float4x4.scale(x: 1.01, y: 1.0, z: 1.01)
-            encoder.setVertexBytes(&uniformsGlow, length: MemoryLayout<SpiralUniforms>.stride, index: 1)
-            encoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: vertexCount)
+            encoder.setVertexBytes(&uniforms, length: MemoryLayout<SpiralUniforms>.stride, index: 1)
+            encoder.drawPrimitives(type: .point, vertexStart: 0, vertexCount: vertexCount)
             
             encoder.endEncoding()
         }

@@ -8,6 +8,8 @@ struct AppReducer {
         var appLaunchCount: Int = 0
         var tracker = TrackerFeature.State()
         var timeline = TimelineFeature.State()
+        var stats = StatsFeature.State()
+        var landmarkCollection = LandmarkCollectionFeature.State()
         @Presents var result: ResultFeature.State?
         @Presents var onboarding: OnboardingFeature.State?
         var isInitialized: Bool = false
@@ -18,6 +20,8 @@ struct AppReducer {
         case `internal`(InternalAction)
         case tracker(TrackerFeature.Action)
         case timeline(TimelineFeature.Action)
+        case stats(StatsFeature.Action)
+        case landmarkCollection(LandmarkCollectionFeature.Action)
         case result(PresentationAction<ResultFeature.Action>)
         case onboarding(PresentationAction<OnboardingFeature.Action>)
         
@@ -45,6 +49,12 @@ struct AppReducer {
         Scope(state: \.timeline, action: \.timeline) {
             TimelineFeature()
         }
+        Scope(state: \.stats, action: \.stats) {
+            StatsFeature()
+        }
+        Scope(state: \.landmarkCollection, action: \.landmarkCollection) {
+            LandmarkCollectionFeature()
+        }
         
         Reduce { state, action in
             switch action {
@@ -55,10 +65,8 @@ struct AppReducer {
                 state.isInitialized = true
                 
                 return .run { [landmarkClient, userDefaults, databaseClient] send in
-                    // Warm up database
                     await databaseClient.ping()
                     
-                    // Check if onboarding is needed
                     let agreed = userDefaults.boolForKey(UserDefaultClient.hasAgreedToTermsKey)
                     if !agreed {
                         await send(.internal(.showOnboarding))
@@ -67,14 +75,7 @@ struct AppReducer {
                     do {
                         let landmarks = try await landmarkClient.loadLandmarks()
                         await send(.internal(.landmarksLoaded(landmarks)))
-                        
-                        #if !targetEnvironment(simulator)
-                        // Trigger sync on launch (skip in simulator)
-                        try await syncClient.sync()
-                        await send(.internal(.syncFinished))
-                        #endif
                     } catch {
-                        // Log error - fallback to empty
                     }
                 }
                 
@@ -85,16 +86,15 @@ struct AppReducer {
                 )
                 
             case let .tracker(.internal(.altitudeReceived(reading))):
-                // Sync altitude to timeline
                 return .send(.timeline(.setAltitude(reading.relativeAltitude)))
                 
             case .tracker(.view(.stopButtonTapped)):
-                // Show result summary when stopping
                 let trackerState = state.tracker
                 if let sessionId = trackerState.currentSessionId {
+                    state.tracker.isTracking = false
+                    state.tracker.isSaving = true
+                    
                     #if targetEnvironment(simulator)
-                    // In simulator, pass tracker data directly (database is disabled)
-                    print("📊 Result: passing \(trackerState.altitudeHistory.count) readings, totalClimb=\(trackerState.totalClimb)")
                     state.result = ResultFeature.State(
                         sessionId: sessionId,
                         readings: trackerState.altitudeHistory,
@@ -108,7 +108,6 @@ struct AppReducer {
                     state.tracker.currentSessionId = nil
                     return .none
                     #else
-                    // Capture primitive values BEFORE entering the asynchronous run block
                     let id = String(sessionId)
                     let startTs = (trackerState.startTime ?? Date()).timeIntervalSince1970
                     let endTs = Date().timeIntervalSince1970
@@ -121,35 +120,14 @@ struct AppReducer {
                     let rer = trackerState.rerEstimation
                     let autoph = trackerState.autophagyDepth
                     
-                    print("🛑 AppReducer: Finalizing session \(id)")
                     return .run { [databaseClient] send in
-                        print("🚀 AppReducer: Entering .run block for \(id)")
                         do {
-                            print("🚀 AppReducer: 300ms delay starting...")
+                            // Stability delay
                             try await Task.sleep(nanoseconds: 300_000_000)
                             
-                            print("🚀 AppReducer: Triggering Task.detached...")
-                            try await Task.detached(priority: .high) {
-                                print("🚀 DETACHED: Thread checking in...")
-                                print("🚀 DETACHED: Accessing AppDatabase.shared...")
-                                let db = AppDatabase.shared
-                                print("🚀 DETACHED: Calling db.saveSession...")
-                                try db.saveSession(
-                                    id: id,
-                                    startDate: startTs,
-                                    endDate: endTs,
-                                    totalClimb: climb,
-                                    maxVam: vam,
-                                    readingsCount: count,
-                                    isSynced: synced,
-                                    isAMPKActivated: active,
-                                    mitochondrialIndex: mito,
-                                    rerEstimation: rer,
-                                    autophagyDepth: autoph
-                                )
-                                print("🚀 DETACHED: db.saveSession returned")
-                            }.value
-                            print("🚀 AppReducer: saveSession SUCCESS")
+                            try await databaseClient.saveSession(
+                                id, startTs, endTs, climb, vam, count, synced, active, mito, rer, autoph
+                            )
                             
                             let resultState = ResultFeature.State(
                                 sessionId: id,
@@ -160,7 +138,6 @@ struct AppReducer {
                             )
                             await send(.internal(.sessionSaved(resultState)))
                         } catch {
-                            print("❌ AppReducer: SAVE FAILED: \(error.localizedDescription)")
                             let resultState = ResultFeature.State(sessionId: id)
                             await send(.internal(.sessionSaved(resultState)))
                         }
@@ -183,7 +160,7 @@ struct AppReducer {
                 state.onboarding = OnboardingFeature.State()
                 return .none
 
-            case .tracker, .timeline, .result, .onboarding, .internal:
+            case .tracker, .timeline, .stats, .landmarkCollection, .result, .onboarding, .internal:
                 return .none
             }
         }
@@ -218,21 +195,69 @@ struct AppView: View {
             )
             .ignoresSafeArea()
             
-            // Deep Background - Particle System
-            MetalParticleView(vam: store.tracker.vam, isAMPKActivated: store.tracker.isAMPKActivated)
-                .ignoresSafeArea()
-            
-            // Background Timeline
-            TimelineView(store: store.scope(state: \.timeline, action: \.timeline))
-                .ignoresSafeArea()
-            
-            // Foreground Tracker Controls
-            VStack {
-                Spacer()
+            TabView {
+                // Main Tracker Tab
+                ZStack {
+                    // Deep Background - Particle System
+                    MetalParticleView(
+                        vam: store.tracker.vam,
+                        altitude: store.tracker.currentAltitude,
+                        isAMPKActivated: store.tracker.isAMPKActivated
+                    )
+                    .ignoresSafeArea()
+                    
+                    // Background Timeline
+                    TimelineView(store: store.scope(state: \.timeline, action: \.timeline))
+                        .ignoresSafeArea()
+                    
+                    // Foreground Tracker Controls
+                    TrackerView(store: store.scope(state: \.tracker, action: \.tracker))
+                        .padding(.bottom, 140)
+                }
+                .tabItem {
+                    Label(String(localized: "TRACKER"), systemImage: "figure.climbing")
+                }
                 
-                TrackerView(store: store.scope(state: \.tracker, action: \.tracker))
+                // Statistics Tab
+                StatsView(store: store.scope(state: \.stats, action: \.stats))
+                    .tabItem {
+                        Label(String(localized: "STATS"), systemImage: "chart.bar.fill")
+                    }
+                
+                // Landmarks Tab
+                LandmarkCollectionView(store: store.scope(state: \.landmarkCollection, action: \.landmarkCollection))
+                    .tabItem {
+                        Label(String(localized: "LANDMARKS"), systemImage: "flag.fill")
+                    }
+            }
+            .tint(.cyan)
+            .onAppear {
+                let appearance = UITabBarAppearance()
+                appearance.configureWithOpaqueBackground()
+                appearance.backgroundColor = UIColor.black
+                appearance.backgroundEffect = UIBlurEffect(style: .dark)
+                
+                // Unselected (Dimmed but visible)
+                let normal = appearance.stackedLayoutAppearance.normal
+                normal.iconColor = UIColor.white.withAlphaComponent(0.4)
+                normal.titleTextAttributes = [
+                    .foregroundColor: UIColor.white.withAlphaComponent(0.4),
+                    .font: UIFont.systemFont(ofSize: 10, weight: .bold)
+                ]
+                
+                // Selected (Vibrant Cyan)
+                let selected = appearance.stackedLayoutAppearance.selected
+                selected.iconColor = UIColor.cyan
+                selected.titleTextAttributes = [
+                    .foregroundColor: UIColor.cyan,
+                    .font: UIFont.systemFont(ofSize: 10, weight: .black)
+                ]
+                
+                UITabBar.appearance().standardAppearance = appearance
+                UITabBar.appearance().scrollEdgeAppearance = appearance
             }
         }
+        .preferredColorScheme(.dark) // Force dark mode regardless of system settings
         .onAppear {
             store.send(.view(.onAppear))
         }

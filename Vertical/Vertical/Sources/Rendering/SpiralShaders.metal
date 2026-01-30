@@ -9,11 +9,14 @@ struct SpiralVertex {
 struct SpiralUniforms {
     float4x4 mvpMatrix;
     float4x4 rotationMatrix;
+    float landmarkHeight; // height of the active landmark
+    float currentClimb;   // actual climb height of the user
 };
 
 struct VertexOut {
     float4 position [[position]];
     float4 color;
+    float pointSize [[point_size]];
 };
 
 vertex VertexOut spiralVertex(
@@ -28,6 +31,7 @@ vertex VertexOut spiralVertex(
     float4 rotatedPosition = uniforms.rotationMatrix * v.position;
     out.position = uniforms.mvpMatrix * rotatedPosition;
     out.color = v.color;
+    out.pointSize = 10.0; // Size of each stair step pixel
     
     return out;
 }

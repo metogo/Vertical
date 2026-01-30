@@ -16,17 +16,11 @@ enum DatabaseError: Error, LocalizedError {
 
 /// Application database manager responsible for migrations and providing database access.
 final class AppDatabase: Sendable {
-    // Single shared instance with early initialization
     static let shared: AppDatabase = {
-        print("🏗 AppDatabase: shared instance initializing...")
         do {
             let path = try AppDatabase.defaultDatabasePath()
-            print("🏗 AppDatabase: Using path: \(path)")
-            let db = try AppDatabase(path: path)
-            print("🏗 AppDatabase: INIT SUCCESS")
-            return db
+            return try AppDatabase(path: path)
         } catch {
-            print("❌ DATABASE CRITICAL ERROR: \(error)")
             fatalError("Database initialization failed: \(error)")
         }
     }()
@@ -37,7 +31,6 @@ final class AppDatabase: Sendable {
         var migrator = DatabaseMigrator()
         
         migrator.registerMigration("create_v1") { db in
-            print("🏗 AppDatabase: Migrating v1...")
             try db.create(table: "sensor_readings") { t in
                 t.autoIncrementedPrimaryKey("id")
                 t.column("sessionId", .text).indexed()
@@ -55,7 +48,6 @@ final class AppDatabase: Sendable {
                 t.column("readingsCount", .integer).notNull()
                 t.column("isSynced", .boolean).notNull().defaults(to: false)
             }
-            print("🏗 AppDatabase: Migration v1 complete.")
         }
         
         migrator.registerMigration("add_ampk_column") { db in
@@ -72,6 +64,13 @@ final class AppDatabase: Sendable {
             }
         }
         
+        migrator.registerMigration("add_unlocked_landmarks") { db in
+            try db.create(table: "unlocked_landmarks") { t in
+                t.column("id", .text).primaryKey()
+                t.column("unlockedDate", .datetime).notNull()
+            }
+        }
+        
         return migrator
     }()
     
@@ -79,7 +78,6 @@ final class AppDatabase: Sendable {
         var config = Configuration()
         config.label = "AppDatabase"
         
-        // WAL mode is essential for modern concurrency
         config.prepareDatabase { db in
             try? db.execute(sql: "PRAGMA journal_mode = WAL")
             try? db.execute(sql: "PRAGMA synchronous = NORMAL")
@@ -88,11 +86,10 @@ final class AppDatabase: Sendable {
         if path == ":memory:" {
             dbWriter = try DatabaseQueue(configuration: config)
         } else {
-            // Using DatabaseQueue for absolute serial safety to debug the hang
-            dbWriter = try DatabaseQueue(path: path, configuration: config)
+            // DatabasePool provides significantly better performance for concurrent reads during writes
+            dbWriter = try DatabasePool(path: path, configuration: config)
         }
         
-        print("🏗 AppDatabase: Running migrations...")
         try AppDatabase.migrator.migrate(dbWriter)
     }
     
@@ -102,7 +99,6 @@ final class AppDatabase: Sendable {
         let directoryURL = appSupportURL.appendingPathComponent("Database", isDirectory: true)
         
         if !fileManager.fileExists(atPath: directoryURL.path) {
-            print("🏗 AppDatabase: Creating database directory...")
             try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         }
         
@@ -111,10 +107,9 @@ final class AppDatabase: Sendable {
     
     // MARK: - Public API
     
-    func save(timestamp: Double, pressure: Double, altitude: Double, sessionId: String?) throws {
+    func save(timestamp: Double, pressure: Double, altitude: Double, sessionId: String?) async throws {
         let localSid = sessionId.map { "\($0)" }
-        // print("💾 AppDatabase.save(sid: \(localSid ?? "nil"))") // Silenced
-        try dbWriter.write { db in
+        try await dbWriter.write { db in
             let record = SensorReadingRecord(
                 sessionId: localSid,
                 timestamp: Date(timeIntervalSince1970: timestamp),
@@ -125,13 +120,9 @@ final class AppDatabase: Sendable {
         }
     }
     
-    func saveSession(id: String, startDate: Double, endDate: Double?, totalClimb: Double, maxVam: Double, readingsCount: Int, isSynced: Bool, isAMPKActivated: Bool, mitochondrialIndex: Double, rerEstimation: Double, autophagyDepth: Double) throws {
-        print("💾 AppDatabase: saveSession starting for \(id)")
+    func saveSession(id: String, startDate: Double, endDate: Double?, totalClimb: Double, maxVam: Double, readingsCount: Int, isSynced: Bool, isAMPKActivated: Bool, mitochondrialIndex: Double, rerEstimation: Double, autophagyDepth: Double) async throws {
         let localId = "\(id)"
-        
-        print("💾 AppDatabase: attempting to enter dbWriter.write...")
-        try dbWriter.write { db in
-            print("💾 AppDatabase: INSIDE write block for \(localId)")
+        try await dbWriter.write { db in
             var session = SessionRecord(
                 id: localId,
                 startDate: Date(timeIntervalSince1970: startDate),
@@ -146,9 +137,7 @@ final class AppDatabase: Sendable {
                 autophagyDepth: autophagyDepth
             )
             try session.save(db)
-            print("💾 AppDatabase: session.save(db) executed.")
         }
-        print("💾 AppDatabase: saveSession FINISHED for \(localId)")
     }
     
     func fetchAll() throws -> [SensorReading] {
@@ -181,6 +170,29 @@ final class AppDatabase: Sendable {
                 .map { $0.toSensorReading() }
         }
     }
+
+    /// Checks if any session or readings exist within the given time range.
+    /// Used for deduplicating HealthKit/Pedometer backfills.
+    func checkOverlap(from: Date, to: Date) throws -> Bool {
+        try dbWriter.read { db in
+            // 1. Check for overlapping high-frequency readings
+            let readingsOverlap = try SensorReadingRecord
+                .filter(SensorReadingRecord.Columns.timestamp >= from)
+                .filter(SensorReadingRecord.Columns.timestamp <= to)
+                .fetchCount(db) > 0
+            
+            if readingsOverlap { return true }
+            
+            // 2. Check for overlapping session records
+            // A session overlaps if (session.start <= to) AND (session.end >= from)
+            let sessionOverlap = try SessionRecord
+                .filter(SessionRecord.Columns.startDate <= to)
+                .filter(SessionRecord.Columns.endDate >= from)
+                .fetchCount(db) > 0
+            
+            return sessionOverlap
+        }
+    }
     
     func fetchSessions() throws -> [SessionRecord] {
         try dbWriter.read { db in
@@ -205,6 +217,23 @@ final class AppDatabase: Sendable {
                 session.isSynced = true
                 try session.update(db)
             }
+        }
+    }
+    
+    func unlockLandmark(id: UUID) async throws {
+        let idString = id.uuidString
+        try await dbWriter.write { db in
+            if try db.tableExists("unlocked_landmarks") {
+                let sql = "INSERT OR IGNORE INTO unlocked_landmarks (id, unlockedDate) VALUES (?, ?)"
+                try db.execute(sql: sql, arguments: [idString, Date()])
+            }
+        }
+    }
+    
+    func fetchUnlockedLandmarkIds() throws -> Set<UUID> {
+        try dbWriter.read { db in
+            let ids = try String.fetchAll(db, sql: "SELECT id FROM unlocked_landmarks")
+            return Set(ids.compactMap { UUID(uuidString: $0) })
         }
     }
     

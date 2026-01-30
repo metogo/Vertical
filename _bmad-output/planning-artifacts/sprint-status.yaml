@@ -1,0 +1,47 @@
+project_name: "vertical"
+current_sprint: 1
+sprint_goal: "Establish sensor core, HealthKit sync, and basic 3D rendering foundation."
+status: "planning"
+epics:
+  - id: 1
+    title: "The Sensor Foundation"
+    status: "todo"
+    priority: "critical"
+  - id: 2
+    title: "Altitude Centric HUD"
+    status: "todo"
+    priority: "high"
+  - id: 3
+    title: "Visual Storytelling (Metal & 3D)"
+    status: "todo"
+    priority: "high"
+  - id: 4
+    title: "Gamification & Landmarks"
+    status: "todo"
+    priority: "medium"
+  - id: 5
+    title: "Social Sharing & Privacy"
+    status: "todo"
+    priority: "medium"
+  - id: 6
+    title: "User System & Cloud"
+    status: "todo"
+    priority: "medium"
+  - id: 7
+    title: "Metabolic Activation (AMPK)"
+    status: "todo"
+    priority: "high"
+  - id: 8
+    title: "3D MetaVision Dashboard"
+    status: "todo"
+    priority: "high"
+  - id: 9
+    title: "Zero-Op Passive Tracking"
+    status: "todo"
+    priority: "critical"
+  - id: 10
+    title: "Retrospective & Insights"
+    status: "todo"
+    priority: "medium"
+active_story: null
+last_updated: "2026-01-27T14:15:00Z"

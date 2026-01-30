@@ -67,6 +67,21 @@ final class ParticleRenderer: NSObject {
         }
     }
     
+    /// Current Altitude - used for spatial fluctuations
+    private var _altitude: Float = 0
+    var altitude: Float {
+        get {
+            vamLock.lock()
+            defer { vamLock.unlock() }
+            return _altitude
+        }
+        set {
+            vamLock.lock()
+            _altitude = newValue
+            vamLock.unlock()
+        }
+    }
+    
     /// Smoothed factor for visual transitions
     private var currentActivationFactor: Float = 0.0
     
@@ -191,6 +206,7 @@ extension ParticleRenderer: MTKViewDelegate {
         let targetFactor: Float = isAMPKActivated ? 1.0 : 0.0
         currentActivationFactor += (targetFactor - currentActivationFactor) * 0.05
         uniforms.pointee.activationFactor = currentActivationFactor
+        uniforms.pointee.altitude = altitude
         
         let particleBuffer = particleBuffers[currentBufferIndex]
         

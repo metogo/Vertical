@@ -49,6 +49,11 @@ This document provides the complete epic and story breakdown for vertical, decom
 - **FR-SY-04**: 用户可以校准当前楼层的标准高度（默认 3米/层）。
 - **FR-TC-06**: 追溯性运动检测 (Retroactive Detection): 通过 `CMPedometer` 检索离线爬楼记录。
 - **FR-TC-07**: 健康数据同步 (HealthKit Passive Sync): 自动同步 HealthKit 中的已爬楼层数据。
+- **FR-TC-08**: **HealthKit 数据去重**: 当本地传感器数据与补录数据重叠时，系统需自动去重，确保代谢指标不被重复计算。
+- **FR-VS-07**: **数值流式增长动画**: 同步历史数据或完成大型地标时，指标数值必须在 1.5s - 2.5s 内动态翻滚显示增长过程，并伴随 haptic 反馈。
+- **FR-DV-04**: **多维统计分析**: 提供日、周、月、6个月、年的时间轴切换，展示累计攀爬米数柱状图及代谢强度区间占比图。
+- **FR-DV-05**: **数据提要模块**: 仿 Health App 的 Summary 设计，展示“过去 7 天日均高度对比”及“周度/月度建议”。
+- **FR-SY-05**: **健康声明显示**: 必须在设置或首页显著位置展示“本应用非医疗诊断工具”的免责声明。
 
 ### NonFunctional Requirements
 
@@ -90,6 +95,11 @@ FR-VS-06: Epic 8 - AMPK Science Board
 FR-SY-04: Epic 2 - Floor height calibration
 FR-TC-06: Epic 9 - Retroactive detection
 FR-TC-07: Epic 9 - Passive Health Sync
+FR-TC-08: Epic 9 - Health data deduplication
+FR-VS-07: Epic 2/9 - Numerical growth animations
+FR-DV-04: Epic 10 - Multi-dimensional stats
+FR-DV-05: Epic 10 - Data summary module
+FR-SY-05: Epic 6 - Disclaimer display
 
 ## Epic List
 
@@ -135,11 +145,17 @@ FR-TC-07: Epic 9 - Passive Health Sync
 **Value**: Visualizes the invisible cellular processes, providing extreme bio-feedback.
 **FRs covered**: FR-VS-05, FR-DV-01, FR-DV-02, FR-DV-03
 
-### Epic 9: Zero-Op Passive Tracking
+### Epic 9: Zero-Op Passive Tracking (Asynchronous Experience)
 
-**Goal**: Solve the "forgot to start" problem by leveraging system-level background activity data.
-**Value**: Reduces user friction and ensures every climb is captured toward metabolic goals.
-**FRs covered**: FR-TC-06, FR-TC-07
+**Goal**: Solve the "forgot to start" problem by leveraging system-level background activity data and providing a delayed reward mechanism.
+**Value**: Reduces user friction and ensures every climb is captured toward metabolic goals, creating a "memory overlap" effect.
+**FRs covered**: FR-TC-06, FR-TC-07, FR-TC-08, FR-VS-07
+
+### Epic 10: Retrospective & Insights (Statistics)
+
+**Goal**: Provide long-term trend analysis and intelligent health summaries mimicking the Health App experience.
+**Value**: Helps users visualize progress over months/years and receive actionable advice for metabolic longevity.
+**FRs covered**: FR-DV-04, FR-DV-05
 
 ## Epic 1: The Sensor Foundation
 
@@ -317,6 +333,16 @@ As a User, I want my data on my iPad, So that I can view it on a big screen.
 **Then** It appears in CloudKit Dashboard
 **And** It syncs to other devices
 
+### Story 6.3: Health Disclaimer Display
+
+As a Legal Counsel, I want a permanent disclaimer in the app, So that users are always reminded this is not a medical device.
+**Acceptance Criteria:**
+
+- Given the Settings view or the start of the Home view
+- When the user navigates there
+- Then a prominent "Non-medical diagnostic tool" disclaimer is visible
+- And it cannot be easily removed by the user
+
 ### Story 8.2: 3D Metadata Sync
 
 As a Developer, I want to sync 3D model state with TCAReducer, So that visuals match logic.
@@ -358,3 +384,45 @@ As a User, I want my HealthKit data to count toward my AMPK goals, So that the a
 - When HealthKit permissions are granted
 - Then the App periodically pulls "Flights Climbed" samples
 - And it creates "Shadow Sessions" in the database for gaps where manual tracking wasn't active
+
+### Story 9.3: Overlapping Data Deduplication
+
+As a Database Architect, I want to prevent double-counting of climbs, So that metabolic scores remain accurate even if passive and active tracking occur simultaneously.
+**Acceptance Criteria:**
+
+- Given a new set of HealthKit "Flights Climbed" samples
+- When I process them for the database
+- Then I check for existing `SensorReadings` or `Journeys` in the same time intervals
+- And I discard or merge overlapping segments to ensure zero data duplication.
+
+### Story 9.4: Numerical Stream Growth Animation
+
+As a UI/UX Designer, I want the backfilled meters to "roll up" visually, So that the user feels a sense of delayed reward and "growth" rather than a static update.
+**Acceptance Criteria:**
+
+- Given a backfill session is confirmed
+- When the dashboard values update
+- Then the altitude number rolls from 0 to the target value over 1.5s - 2.5s
+- And haptic "ticks" accompany the rolling numbers (FR-VS-07).
+
+## Epic 10: Retrospective & Insights (Statistics)
+
+### Story 10.1: Multi-Dimensional Scaling Dashboard
+
+As a Power User, I want to see my climb trends over different timeframes, So that I can track my long-term metabolic health.
+**Acceptance Criteria:**
+
+- Given the "Statistics" tab
+- When I switch between Day, Week, Month, 6M, and Year
+- Then the bar chart updates to show cumulative meters climbed for each sub-period
+- And a secondary chart shows the % distribution of $HRR\%$ intensity zones.
+
+### Story 10.2: Smart Summary "Past 7-Day" Comparison
+
+As a User, I want a quick summary of my activity compared to last week, So that I know if I'm improving.
+**Acceptance Criteria:**
+
+- Given the Statistics summary section
+- When the app analyzes the last 7 days vs previous 7 days
+- Then it displays a card stating "Average Height: +X% vs last week"
+- And it provides one actionable "Metabolic Recommendation" based on the data (FR-DV-05).
